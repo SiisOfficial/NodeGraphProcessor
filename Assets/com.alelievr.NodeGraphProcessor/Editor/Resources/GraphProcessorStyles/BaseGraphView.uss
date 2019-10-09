@@ -1,4 +1,6 @@
 #graphRootView
 {
-    background-color: #101010;
+    background-color: #121212;
+    background-image: resource("Images/grid_big");
+    -unity-background-scale-mode: scale-and-crop;
 }
