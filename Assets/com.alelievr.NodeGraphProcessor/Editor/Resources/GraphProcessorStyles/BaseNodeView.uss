@@ -28,3 +28,44 @@
     background-image : resource("Icons/SettingsIcons");
     visibility: visible;
 }
+
+ParameterNodeView #title {
+    height: 18px;
+}
+
+ParameterNodeView #title Label {
+    margin-left: 2px;
+}
+
+ParameterNodeView #contents #top #output,ParameterNodeView #contents #top #input {
+    padding-top: 0px;
+    padding-bottom: 1px;
+}
+
+ParameterNodeView #contents PortView {
+    height: 12px;
+    padding-right: 0;
+    padding-left: 0;
+}
+
+ParameterNodeView #contents PortView > Label{
+    display: none;
+}
+
+ParameterNodeView #controls EnumField {
+    margin: 0;
+}
+
+ParameterNodeView #controls EnumField > VisualElement {
+    border-width: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 4px;
+    padding-right: 4px;
+    height: 14px;
+}
+
+ParameterNodeView #controls EnumField > VisualElement > TextElement {
+    font-size: 10px;
+    margin-top: 0;
+}
