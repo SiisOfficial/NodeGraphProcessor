@@ -30,26 +30,34 @@
 }
 
 ParameterNodeView #title {
-    height: 18px;
+    height: 16px;
 }
 
-ParameterNodeView #title Label {
+ParameterNodeView #title.input {
+    flex-direction: row-reverse;
+}
+
+ParameterNodeView #node-border {
+    border-radius: 10px;
+}
+
+ParameterNodeView #selection-border {
+    border-radius: 12px;
+}
+
+ParameterNodeView #title > Label {
     margin-left: 2px;
 }
 
-ParameterNodeView #contents #top #output,ParameterNodeView #contents #top #input {
-    padding-top: 0px;
-    padding-bottom: 1px;
-}
-
-ParameterNodeView #contents PortView {
-    height: 12px;
+ParameterNodeView #title #top PortView {
     padding-right: 0;
     padding-left: 0;
+    margin-top: 2px;
 }
 
-ParameterNodeView #contents PortView > Label{
-    display: none;
+ParameterNodeView PortView > Label {
+    visibility: hidden;
+    width: 0;
 }
 
 ParameterNodeView #controls EnumField {
@@ -68,4 +76,8 @@ ParameterNodeView #controls EnumField > VisualElement {
 ParameterNodeView #controls EnumField > VisualElement > TextElement {
     font-size: 10px;
     margin-top: 0;
+}
+
+ParameterNodeView #controls EnumField > VisualElement > VisualElement {
+    margin-right: -2px;
 }

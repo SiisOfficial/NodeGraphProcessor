@@ -54,7 +54,7 @@ namespace GraphProcessor
 			RegisterCallback< DragPerformEvent >(DragPerformedCallback);
 			RegisterCallback< DragUpdatedEvent >(DragUpdatedCallback);
 
-			SetupZoom(0.33f, 1.5f);
+			SetupZoom(0.33f, 1.67f);
 
 			Undo.undoRedoPerformed += ReloadView;
 
