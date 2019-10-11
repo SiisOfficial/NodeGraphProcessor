@@ -36,7 +36,11 @@ public class ParameterNodeView : BaseNodeView
         topContainer.parent.Remove(topContainer);
         //    Add Port to the #title
         titleContainer.Add(topContainer);
-        
+        //    Find parameter type and add icon 
+        var type = parameterNode.parameter.type.Split(new[] {','})[0].Split(new[] {'.'})[1];
+        mainContainer.parent.AddToClassList("parameter-"+type);
+        titleContainer.Add(new VisualElement {name = "parameterIcon"});
+        titleContainer.Q("parameterIcon").SendToBack();
 
         parameterNode.onParameterChanged += UpdateView;
         UpdateView();

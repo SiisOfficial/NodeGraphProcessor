@@ -29,6 +29,14 @@
     visibility: visible;
 }
 
+ParameterNodeView #node-border {
+    border-radius: 10px;
+}
+
+ParameterNodeView #selection-border {
+    border-radius: 12px;
+}
+
 ParameterNodeView #title {
     height: 16px;
 }
@@ -37,12 +45,16 @@ ParameterNodeView #title.input {
     flex-direction: row-reverse;
 }
 
-ParameterNodeView #node-border {
-    border-radius: 10px;
+ParameterNodeView #parameterIcon {
+    height: 18px;
+    width: 11px;
+    -unity-background-scale-mode: scale-to-fit;
+    margin-left: 3px;
 }
 
-ParameterNodeView #selection-border {
-    border-radius: 12px;
+ParameterNodeView #title.input > #parameterIcon {
+    margin-left: 0;
+    margin-right: 3px;
 }
 
 ParameterNodeView #title > Label {
@@ -80,4 +92,12 @@ ParameterNodeView #controls EnumField > VisualElement > TextElement {
 
 ParameterNodeView #controls EnumField > VisualElement > VisualElement {
     margin-right: -2px;
+}
+
+ParameterNodeView.parameter-Rigidbody #parameterIcon {
+    background-image : resource("Rigidbody Icon");
+}
+
+ParameterNodeView.parameter-Vector3 #parameterIcon {
+    background-image : resource("Transform Icon");
 }
