@@ -94,10 +94,54 @@ ParameterNodeView #controls EnumField > VisualElement > VisualElement {
     margin-right: -2px;
 }
 
+ParameterNodeView #parameterIcon {
+    background-image : resource("Favorite Icon");
+}
+
 ParameterNodeView.parameter-Rigidbody #parameterIcon {
     background-image : resource("Rigidbody Icon");
 }
 
 ParameterNodeView.parameter-Vector3 #parameterIcon {
     background-image : resource("Transform Icon");
+}
+
+ParameterNodeView.parameter-GameObject #parameterIcon {
+    background-image : resource("GameObject Icon");
+}
+
+ParameterNodeView.parameter-Prefab #parameterIcon {
+    background-image : resource("Prefab Icon");
+}
+
+ParameterNodeView.parameter-Mesh #parameterIcon {
+    background-image : resource("Mesh Icon");
+}
+
+ParameterNodeView.parameter-Renderer #parameterIcon {
+    background-image : resource("MeshRenderer Icon");
+}
+
+ParameterNodeView.parameter-Material #parameterIcon {
+    background-image : resource("Material Icon");
+}
+
+ParameterNodeView.parameter-Texture #parameterIcon {
+    background-image : resource("Texture Icon");
+}
+
+ParameterNodeView.parameter-Sprite #parameterIcon {
+    background-image : resource("Sprite Icon");
+}
+
+ParameterNodeView.parameter-Component #parameterIcon {
+    background-image : resource("cs Script Icon");
+}
+
+ParameterNodeView.parameter-Color #parameterIcon {
+    background-image : resource("ColorPicker-HueRing");
+}
+
+ParameterNodeView.parameter-String #parameterIcon {
+    background-image: resource("TextField@2x");
 }
