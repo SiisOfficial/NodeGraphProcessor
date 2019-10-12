@@ -261,7 +261,7 @@ namespace GraphProcessor
 				guid = guid,
 				name = name,
 				type = type.AssemblyQualifiedName,
-				serializedValue = new SerializableObject(value)
+				serializedValue = new SerializableObject(value, type)
 			});
 
 			onExposedParameterListChanged?.Invoke();
