@@ -15,7 +15,8 @@ namespace GraphProcessor
 
 		public ExposedParameter	parameter { get; private set; }
 
-		public ExposedParameterFieldView(BaseGraphView graphView, ExposedParameter param) : base(null, param.name, "")
+		//	We should need to change this to just add the class, not the texture.
+		public ExposedParameterFieldView(BaseGraphView graphView, ExposedParameter param, string shortType) : base(GetIconFromType(shortType), param.name, shortType)
 		{
 			this.graphView = graphView;
 			parameter = param;
@@ -35,5 +36,30 @@ namespace GraphProcessor
 
             evt.StopPropagation();
         }
+
+		static Texture GetIconFromType(string type)
+		{
+			var textureName = "console.erroricon.sml";
+			var isBuiltIn = true;
+
+			switch(type)
+			{
+				case "Rigidbody":
+					textureName = "Rigidbody Icon";
+					break;
+				case "Vector3":
+					textureName = "Transform Icon";
+					break;
+				case "GameObject":
+					textureName = "GameObject Icon";
+					break;
+				case "Color":
+					textureName = "ColorPicker-HueRing";
+					break;
+			}
+
+			
+			return isBuiltIn ? (Texture)EditorGUIUtility.Load(textureName) : (Texture)Resources.Load(textureName);
+		} 
 	}
 }

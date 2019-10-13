@@ -4,3 +4,9 @@
     background-image: resource("Images/grid_big");
     -unity-background-scale-mode: scale-and-crop;
 }
+
+ExposedParameterFieldView .pill.has-icon #contents > #top > Image#icon {
+    width: 10px;
+    height: 10px;
+    margin: 0;
+}

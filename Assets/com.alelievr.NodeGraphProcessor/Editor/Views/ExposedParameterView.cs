@@ -20,19 +20,23 @@ namespace GraphProcessor
         {
             var parameterType = new GenericMenu();
 
-            foreach (var paramType in GetExposedParameterTypes())
-            parameterType.AddItem(new GUIContent(paramType.Name), false, () => {
-                string uniqueName = "New " + paramType.Name + "Param";
-                object value = null;
-
-                uniqueName = GetUniqueExposedPropertyName(uniqueName);
-
-                if (paramType.IsValueType)
+            foreach(var paramType in GetExposedParameterTypes())
+            {
+                parameterType.AddItem(new GUIContent(paramType.Name), false, () =>
                 {
-                    value = Activator.CreateInstance(paramType);
-                }
-                graphView.graph.AddExposedParameter(uniqueName, paramType, value);
-            });
+                    string uniqueName = "New " + paramType.Name + "Param";
+                    object value      = null;
+
+                    uniqueName = GetUniqueExposedPropertyName(uniqueName);
+
+                    if(paramType.IsValueType)
+                    {
+                        value = Activator.CreateInstance(paramType);
+                    }
+
+                    graphView.graph.AddExposedParameter(uniqueName, paramType, value);
+                });
+            }
 
             parameterType.ShowAsContext();
         }
@@ -65,7 +69,9 @@ namespace GraphProcessor
 
             foreach (var param in graphView.graph.exposedParameters)
             {
-                content.Add(new ExposedParameterFieldView(graphView, param));
+                //    I started to change fieldView to rowField, so that way we can control the exposed parameter's settings (Like, change it is exposed or not).
+                //    So, I added an empty VisualElement right now, it will be a new View class that controls the parameter.
+                content.Add(new BlackboardRow(new ExposedParameterFieldView(graphView, param, GetParameterShortType(param.type)), new VisualElement()));
             }
         }
 
@@ -82,6 +88,11 @@ namespace GraphProcessor
             header.Add(new Button(OnAddClicked){
                 text = "+"
             });
+        }
+
+        protected string GetParameterShortType(string type)
+        {
+            return type.Split(new[] {','})[0].Split(new[] {'.'})[1];
         }
     }
 }
