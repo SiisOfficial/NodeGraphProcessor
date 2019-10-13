@@ -1,12 +1,72 @@
-#graphRootView
-{
+#graphRootView {
     background-color: #121212;
     background-image: resource("Images/grid_big");
     -unity-background-scale-mode: scale-and-crop;
 }
 
-ExposedParameterFieldView .pill.has-icon #contents > #top > Image#icon {
+/**
+    ICONS
+ */
+
+ExposedParameterFieldView .pill #contents > #top > Image#icon {
     width: 10px;
     height: 10px;
     margin: 0;
+    visibility: visible;
 }
+
+ParameterNodeView #parameterIcon, ExposedParameterFieldView .pill #contents > #top > Image#icon {
+    background-image: resource("Favorite Icon");
+}
+
+ParameterNodeView.parameter-Rigidbody #parameterIcon, ExposedParameterFieldView.parameter-Rigidbody .pill #contents > #top > Image#icon {
+    background-image: resource("Rigidbody Icon");
+}
+
+ParameterNodeView.parameter-Vector3 #parameterIcon, ExposedParameterFieldView.parameter-Vector3 .pill #contents > #top > Image#icon {
+    background-image: resource("Transform Icon");
+}
+
+ParameterNodeView.parameter-GameObject #parameterIcon, ExposedParameterFieldView.parameter-GameObject .pill #contents > #top > Image#icon {
+    background-image: resource("GameObject Icon");
+}
+
+ParameterNodeView.parameter-Prefab #parameterIcon, ExposedParameterFieldView.parameter-Prefab .pill #contents > #top > Image#icon {
+    background-image: resource("Prefab Icon");
+}
+
+ParameterNodeView.parameter-Mesh #parameterIcon, ExposedParameterFieldView.parameter-Mesh .pill #contents > #top > Image#icon {
+    background-image: resource("Mesh Icon");
+}
+
+ParameterNodeView.parameter-Renderer #parameterIcon, ExposedParameterFieldView.parameter-Renderer .pill #contents > #top > Image#icon {
+    background-image: resource("MeshRenderer Icon");
+}
+
+ParameterNodeView.parameter-Material #parameterIcon, ExposedParameterFieldView.parameter-Material .pill #contents > #top > Image#icon {
+    background-image: resource("Material Icon");
+}
+
+ParameterNodeView.parameter-Texture #parameterIcon, ExposedParameterFieldView.parameter-Texture .pill #contents > #top > Image#icon {
+    background-image: resource("Texture Icon");
+}
+
+ParameterNodeView.parameter-Sprite #parameterIcon, ExposedParameterFieldView.parameter-Sprite .pill #contents > #top > Image#icon {
+    background-image: resource("Sprite Icon");
+}
+
+ParameterNodeView.parameter-Component #parameterIcon, ExposedParameterFieldView.parameter-Component .pill #contents > #top > Image#icon {
+    background-image: resource("cs Script Icon");
+}
+
+ParameterNodeView.parameter-Color #parameterIcon, ExposedParameterFieldView.parameter-Color .pill #contents > #top > Image#icon {
+    background-image: resource("ColorPicker-HueRing");
+}
+
+ParameterNodeView.parameter-String #parameterIcon, ExposedParameterFieldView.parameter-String .pill #contents > #top > Image#icon {
+    background-image: resource("TextField@2x");
+}
+
+/**
+    ICONS
+ */
