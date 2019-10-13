@@ -14,6 +14,16 @@ namespace GraphProcessor
 		public string				type;
 		public SerializableObject	serializedValue;
 		public bool					input = true;
+		public ExposedParameterSettings settings;
+	}
+
+	[Serializable]
+	public class ExposedParameterSettings
+	{
+		public bool  isHidden       = false;
+		public bool  isSlider       = false;
+		public float sliderMinValue = 0;
+		public float sliderMaxValue = 0;
 	}
 
 	public class GraphChanges
@@ -261,6 +271,7 @@ namespace GraphProcessor
 				guid = guid,
 				name = name,
 				type = type.AssemblyQualifiedName,
+				settings = new ExposedParameterSettings(),
 				serializedValue = new SerializableObject(value, type)
 			});
 
@@ -297,6 +308,30 @@ namespace GraphProcessor
 		public void UpdateExposedParameterName(ExposedParameter parameter, string name)
 		{
 			parameter.name = name;
+			onExposedParameterModified.Invoke(name);
+		}
+
+		public void UpdateExposedParameterVisibility(ExposedParameter parameter, bool isHidden)
+		{
+			parameter.settings.isHidden = isHidden;
+			onExposedParameterModified.Invoke(name);
+		}
+
+		public void UpdateExposedSliderVisibility(ExposedParameter parameter, bool isSlider)
+		{
+			parameter.settings.isSlider = isSlider;
+			onExposedParameterModified.Invoke(name);
+		}
+
+		public void UpdateExposedSliderMinValue(ExposedParameter parameter, float minValue)
+		{
+			parameter.settings.sliderMinValue = minValue;
+			onExposedParameterModified.Invoke(name);
+		}
+
+		public void UpdateExposedSliderMaxValue(ExposedParameter parameter, float maxValue)
+		{
+			parameter.settings.sliderMaxValue = maxValue;
 			onExposedParameterModified.Invoke(name);
 		}
 

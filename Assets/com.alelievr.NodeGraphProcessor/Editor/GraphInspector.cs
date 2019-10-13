@@ -48,13 +48,40 @@ namespace GraphProcessor
             if (graph.exposedParameters.Count != 0)
                 parameterContainer.Add(new Label("Exposed Parameters:"));
 
+            var hasHidden = false;
+            
             foreach (var param in graph.exposedParameters)
             {
+                if(param.settings.isHidden)
+                {
+                    hasHidden = true;
+                    continue;
+                }
                 VisualElement prop = new VisualElement();
                 prop.style.display = DisplayStyle.Flex;
                 Type paramType = Type.GetType(param.type);
                 var field = FieldFactory.CreateField(paramType, param.serializedValue.value, (newValue) => {
 					Undo.RegisterCompleteObjectUndo(graph, "Changed Parameter " + param.name + " to " + newValue);
+                    param.serializedValue.value = newValue;
+                }, param.name);
+                prop.Add(field);
+                parameterContainer.Add(prop);
+            }
+            
+            if(!hasHidden) return;
+
+            var hiddenTitle = new Label("Hidden Parameters:");
+            hiddenTitle.style.marginTop = 10;
+            parameterContainer.Add(hiddenTitle);
+            
+            foreach (var param in graph.exposedParameters)
+            {
+                if(!param.settings.isHidden) continue;
+                VisualElement prop = new VisualElement();
+                prop.style.display = DisplayStyle.Flex;
+                Type paramType = Type.GetType(param.type);
+                var field = FieldFactory.CreateField(paramType, param.serializedValue.value, (newValue) => {
+                    Undo.RegisterCompleteObjectUndo(graph, "Changed Parameter " + param.name + " to " + newValue);
                     param.serializedValue.value = newValue;
                 }, param.name);
                 prop.Add(field);

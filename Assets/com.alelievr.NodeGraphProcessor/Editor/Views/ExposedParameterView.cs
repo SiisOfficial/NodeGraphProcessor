@@ -69,9 +69,7 @@ namespace GraphProcessor
 
             foreach (var param in graphView.graph.exposedParameters)
             {
-                //    I started to change fieldView to rowField, so that way we can control the exposed parameter's settings (Like, change it is exposed or not).
-                //    So, I added an empty VisualElement right now, it will be a new View class that controls the parameter.
-                content.Add(new BlackboardRow(new ExposedParameterFieldView(graphView, param, GetParameterShortType(param.type)), new VisualElement()));
+                content.Add(new BlackboardRow(new ExposedParameterFieldView(graphView, param, GetParameterShortType(param.type)), new ExposedParameterPropertyView(graphView, param, GetParameterShortType(param.type))));
             }
         }
 

@@ -4,6 +4,18 @@
     -unity-background-scale-mode: scale-and-crop;
 }
 
+ExposedParameterPropertyView {
+    padding-left: 13px;
+}
+
+ExposedParameterPropertyView FloatField {
+    margin-left: 16px;
+}
+
+ExposedParameterPropertyView FloatField > Label {
+    min-width: 90px;
+}
+
 /**
     ICONS
  */
