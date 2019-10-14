@@ -65,8 +65,16 @@ ParameterNodeView.parameter-Vector3 #parameterIcon, ExposedParameterFieldView.pa
     background-image: resource("Transform Icon");
 }
 
+ParameterNodeView.parameter-Transform #parameterIcon, ExposedParameterFieldView.parameter-Transform .pill #contents > #top > Image#icon {
+    background-image: resource("Transform Icon");
+}
+
+ParameterNodeView.parameter-TextMeshPro #parameterIcon, ExposedParameterFieldView.parameter-TextMeshPro .pill #contents > #top > Image#icon {
+    background-image: resource("TextMesh Icon");
+}
+
 ParameterNodeView.parameter-GameObject #parameterIcon, ExposedParameterFieldView.parameter-GameObject .pill #contents > #top > Image#icon {
-    background-image: resource("GameObject Icon");
+    background-image: resource("GameObject On Icon");
 }
 
 ParameterNodeView.parameter-Prefab #parameterIcon, ExposedParameterFieldView.parameter-Prefab .pill #contents > #top > Image#icon {
@@ -91,6 +99,22 @@ ParameterNodeView.parameter-Texture #parameterIcon, ExposedParameterFieldView.pa
 
 ParameterNodeView.parameter-Sprite #parameterIcon, ExposedParameterFieldView.parameter-Sprite .pill #contents > #top > Image#icon {
     background-image: resource("Sprite Icon");
+}
+
+ParameterNodeView.parameter-Animator #parameterIcon, ExposedParameterFieldView.parameter-Animator .pill #contents > #top > Image#icon {
+    background-image: resource("Animator Icon");
+}
+
+ParameterNodeView.parameter-Collider #parameterIcon, ExposedParameterFieldView.parameter-Collider .pill #contents > #top > Image#icon {
+    background-image: resource("BoxCollider Icon");
+}
+
+ParameterNodeView.parameter-AudioSource #parameterIcon, ExposedParameterFieldView.parameter-AudioSource .pill #contents > #top > Image#icon {
+    background-image: resource("AudioSource Icon");
+}
+
+ParameterNodeView.parameter-AudioClip #parameterIcon, ExposedParameterFieldView.parameter-AudioClip .pill #contents > #top > Image#icon {
+    background-image: resource("AudioClip Icon");
 }
 
 ParameterNodeView.parameter-Component #parameterIcon, ExposedParameterFieldView.parameter-Component .pill #contents > #top > Image#icon {
