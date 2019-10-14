@@ -4,6 +4,28 @@
     -unity-background-scale-mode: scale-and-crop;
 }
 
+/**
+    EXPOSED PARAMETER STYLE
+ */
+
+ExposedParameterView #contentContainer {
+    padding-bottom: 12px;
+    padding-top: 2px;
+}
+
+ExposedParameterView #titleLabel {
+    padding-left: 6px;
+}
+
+ExposedParameterView #header Button {
+    margin-right: 6px;
+}
+
+ExposedParameterFieldView #contentItem > Label {
+    padding-right: 0;
+    margin-right: 0;
+}
+
 ExposedParameterPropertyView {
     padding-left: 13px;
 }
@@ -15,6 +37,10 @@ ExposedParameterPropertyView FloatField {
 ExposedParameterPropertyView FloatField > Label {
     min-width: 90px;
 }
+
+/**
+    EXPOSED PARAMETER STYLE
+ */
 
 /**
     ICONS
