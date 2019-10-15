@@ -13,8 +13,19 @@ namespace GraphProcessor
 	public static class FieldFactory
 	{
 		static readonly Dictionary< Type, Type >    fieldDrawers = new Dictionary< Type, Type >();
+		
+		//	Only non-scene objects should be assignable, so we need this filter
+		static readonly List<Type> supportedObjectFields = new List<Type>
+		{
+			typeof(GameObject),
+			typeof(Texture),
+			typeof(Sprite),
+			typeof(AudioClip),
+			typeof(Material)
+		};
 
 		static readonly MethodInfo	        		createFieldMethod = typeof(FieldFactory).GetMethod("CreateFieldSpecific", BindingFlags.Static | BindingFlags.Public);
+		static readonly MethodInfo	        		createObjectFieldMethod = typeof(FieldFactory).GetMethod("CreateObjectFieldSpecific", BindingFlags.Static | BindingFlags.Public);
 
 		static FieldFactory()
 		{
@@ -67,11 +78,23 @@ namespace GraphProcessor
 			return CreateField(value != null ? value.GetType() : typeof(T), label) as INotifyValueChanged< T >;
 		}
 
+		public static INotifyValueChanged< UnityEngine.Object > CreateObjectField< T >(T value, string label = null)
+		{
+			return CreateField(value != null ? value.GetType() : typeof(T), label) as INotifyValueChanged< UnityEngine.Object >;
+		}
+		
 		public static VisualElement CreateField(Type t, string label)
 		{
 			Type drawerType;
 
-			fieldDrawers.TryGetValue(t, out drawerType);
+			if(t.IsSubclassOf(typeof(UnityEngine.Object)))
+			{
+				fieldDrawers.TryGetValue(typeof(UnityEngine.Object), out drawerType);
+			}
+			else
+			{
+				fieldDrawers.TryGetValue(t, out drawerType);
+			}
 
 			if (drawerType == null)
 				drawerType = fieldDrawers.FirstOrDefault(kp => kp.Key.IsReallyAssignableFrom(t)).Value;
@@ -130,8 +153,21 @@ namespace GraphProcessor
 			fieldDrawer.RegisterValueChangedCallback((e) => {
 				onValueChanged(e.newValue);
 			});
+			return fieldDrawer as INotifyValueChanged<T>;
+		}
 
-			return fieldDrawer as INotifyValueChanged< T >;
+		public static INotifyValueChanged< UnityEngine.Object > CreateObjectFieldSpecific< T >(T value, Action< object > onValueChanged, string label)
+		{
+			var fieldDrawer = CreateObjectField< T >(value, label);
+			
+			if (fieldDrawer == null)
+				return null;
+				
+			fieldDrawer.value = value as UnityEngine.Object;
+			fieldDrawer.RegisterValueChangedCallback((e) => {
+				onValueChanged(e.newValue);
+			});
+			return fieldDrawer as INotifyValueChanged<UnityEngine.Object>;
 		}
 
 		public static VisualElement CreateField(Type fieldType, object value, Action< object > onValueChanged, string label)
@@ -139,6 +175,13 @@ namespace GraphProcessor
 			if (typeof(Enum).IsAssignableFrom(fieldType))
 				fieldType = typeof(Enum);
 			
+			if(fieldType.IsSubclassOf(typeof(UnityEngine.Object)) && supportedObjectFields.Contains(fieldType))
+			{
+				var createObjectFieldSpecificMethod = createObjectFieldMethod.MakeGenericMethod(fieldType);
+
+				return createObjectFieldSpecificMethod.Invoke(null, new object[]{value, onValueChanged, label}) as VisualElement;
+			}
+
 			var createFieldSpecificMethod = createFieldMethod.MakeGenericMethod(fieldType);
 
 			return createFieldSpecificMethod.Invoke(null, new object[]{value, onValueChanged, label}) as VisualElement;
