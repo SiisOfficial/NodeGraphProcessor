@@ -7,6 +7,8 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Globalization;
+using UnityEngine.Audio;
+using UnityEngine.Video;
 
 namespace GraphProcessor
 {
@@ -21,7 +23,12 @@ namespace GraphProcessor
 			typeof(Texture),
 			typeof(Sprite),
 			typeof(AudioClip),
-			typeof(Material)
+			typeof(AudioMixer),
+			typeof(Material),
+			typeof(ScriptableObject),
+			typeof(VideoClip),
+			typeof(AnimationClip),
+			typeof(BaseGraph)
 		};
 
 		static readonly MethodInfo	        		createFieldMethod = typeof(FieldFactory).GetMethod("CreateFieldSpecific", BindingFlags.Static | BindingFlags.Public);
@@ -136,8 +143,11 @@ namespace GraphProcessor
 			// For mutiline
 			if (field is TextField textField)
 				textField.multiline = true;
-			if (field is ObjectField objField)
+			if(field is ObjectField objField)
+			{
 				objField.objectType = t;
+				objField.allowSceneObjects = false;
+			}
 			
 			return field as VisualElement;
 		}
