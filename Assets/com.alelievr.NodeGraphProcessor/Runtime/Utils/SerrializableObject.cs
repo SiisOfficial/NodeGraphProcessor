@@ -8,7 +8,6 @@ using UnityEditor;
 
 namespace GraphProcessor
 {
-    // Warning: this class only support the serialization of UnityObject and primitive
     [System.Serializable]
     public class SerializableObject : ISerializationCallbackReceiver
     {
@@ -89,8 +88,6 @@ namespace GraphProcessor
             }
             else if (typeof(UnityEngine.Object).IsAssignableFrom(type))
             {
-//                ObjectWrapper obj = new ObjectWrapper();
-//                JsonUtility.FromJsonOverwrite(serializedValue, obj);
                 value = (serializedObjectValue as SerializedObject)?.value;
             }
             else if (type == typeof(string))
@@ -139,10 +136,7 @@ namespace GraphProcessor
             {
                 if ((value as UnityEngine.Object) == null)
                     return ;
-//
-//                ObjectWrapper wrapper = new ObjectWrapper { value = value as UnityEngine.Object };
-//                serializedValue = JsonUtility.ToJson(wrapper);
-//                
+                
                 serializedObjectValue = new SerializedObject { value = value as UnityEngine.Object };
             }
             else if (value is string)

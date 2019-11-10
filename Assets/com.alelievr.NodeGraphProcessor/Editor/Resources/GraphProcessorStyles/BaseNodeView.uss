@@ -29,16 +29,35 @@
     visibility: visible;
 }
 
-ParameterNodeView #node-border {
+#title {
+    height: 28px;
+    background-color: #454545;
+}
+
+#title > Label {
+    font-size: 11px;
+    -unity-font-style: bold;
+}
+
+.graphElement #node-border {
+    border-radius: 8px;
+}
+
+.graphElement #selection-border {
     border-radius: 10px;
 }
 
-ParameterNodeView #selection-border {
+ParameterNodeView.graphElement #node-border {
+    border-radius: 10px;
+}
+
+ParameterNodeView.graphElement #selection-border {
     border-radius: 12px;
 }
 
 ParameterNodeView #title {
     height: 16px;
+    background-color: #363636;
 }
 
 ParameterNodeView #title.input {
@@ -59,6 +78,7 @@ ParameterNodeView #title.input > #parameterIcon {
 
 ParameterNodeView #title > Label {
     margin-left: 2px;
+    -unity-font-style: normal;
 }
 
 ParameterNodeView #title #top PortView {
@@ -92,4 +112,21 @@ ParameterNodeView #controls EnumField > VisualElement > TextElement {
 
 ParameterNodeView #controls EnumField > VisualElement > VisualElement {
     margin-right: -2px;
+}
+
+.operator-node > #node-border {
+    border-radius: 9px;
+}
+
+.operator-node > #selection-border {
+    border-radius: 11px;
+}
+
+.operator-node #contents > #top > #input, .operator-node #contents > #top > #output {
+    padding-top: 1px;
+    padding-bottom: 1px;
+}
+
+#input > .port, #output > .port {
+    height: 22px;
 }
