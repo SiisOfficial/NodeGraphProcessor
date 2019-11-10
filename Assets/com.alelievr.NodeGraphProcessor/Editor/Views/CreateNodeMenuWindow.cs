@@ -48,6 +48,7 @@ namespace GraphProcessor
             var nodeEntries = graphView.FilterCreateNodeMenuEntries().OrderBy(k => k.Key);
             var titles = new HashSet< string >();
 
+            //    TODO: Burası 3 kademeli hale getirilecek. Şu anda çok manuel olarak 2 kademeli oluyor en fazla.
 			foreach (var nodeMenuItem in nodeEntries)
 			{
                 string  nodePath = nodeMenuItem.Key;

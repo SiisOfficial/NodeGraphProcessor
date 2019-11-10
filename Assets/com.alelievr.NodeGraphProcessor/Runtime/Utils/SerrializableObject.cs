@@ -8,7 +8,6 @@ using UnityEditor;
 
 namespace GraphProcessor
 {
-    // Warning: this class only support the serialization of UnityObject and primitive
     [System.Serializable]
     public class SerializableObject : ISerializationCallbackReceiver
     {
@@ -17,6 +16,45 @@ namespace GraphProcessor
         {
             public UnityEngine.Object value;
         }
+        
+        #region Supported Objects
+        
+        [Serializable]
+        public class SerializedValueBase {}
+
+        [Serializable]
+        public class SerializedObject : SerializedValueBase
+        {
+            public UnityEngine.Object value;
+        }
+
+        [Serializable]
+        public class SerializedAnimationCurve : SerializedValueBase
+        {
+            public AnimationCurve value;
+        }
+
+        [Serializable]
+        public class SerializedVector2 : SerializedValueBase
+        {
+            public Vector2 value;
+        }
+
+        [Serializable]
+        public class SerializedVector3 : SerializedValueBase
+        {
+            public Vector3 value;
+        }
+
+        [Serializable]
+        public class SerializedColor : SerializedValueBase
+        {
+            public Color value;
+        }
+        
+        [SerializeReference] public SerializedValueBase serializedObjectValue;
+        
+        #endregion
 
         public string serializedType;
         public string serializedName;
@@ -50,17 +88,34 @@ namespace GraphProcessor
             }
             else if (typeof(UnityEngine.Object).IsAssignableFrom(type))
             {
-                ObjectWrapper obj = new ObjectWrapper();
-                JsonUtility.FromJsonOverwrite(serializedValue, obj);
-                value = obj.value;
+                value = (serializedObjectValue as SerializedObject)?.value;
             }
             else if (type == typeof(string))
                 value = serializedValue.Length > 1 ? serializedValue.Substring(1, serializedValue.Length - 2).Replace("\\\"", "\"") : "";
             else
             {
                 try {
-                    value = Activator.CreateInstance(type);
-                    JsonUtility.FromJsonOverwrite(serializedValue, value);
+                    if(typeof(AnimationCurve).IsAssignableFrom(type))
+                    {
+                        value = (serializedObjectValue as SerializedAnimationCurve)?.value;
+                    }
+                    else if(typeof(Vector2).IsAssignableFrom(type))
+                    {
+                        value = (serializedObjectValue as SerializedVector2)?.value;
+                    }
+                    else if(typeof(Vector3).IsAssignableFrom(type))
+                    {
+                        value = (serializedObjectValue as SerializedVector3)?.value;
+                    }
+                    else if(typeof(Color).IsAssignableFrom(type))
+                    {
+                        value = (serializedObjectValue as SerializedColor)?.value;
+                    }
+                    else
+                    {
+                        value = Activator.CreateInstance(type);
+                        JsonUtility.FromJsonOverwrite(serializedValue, value);
+                    }
                 } catch (Exception e){
                     Debug.LogError(e);
                     Debug.LogError("Can't serialize type " + serializedType);
@@ -81,18 +136,34 @@ namespace GraphProcessor
             {
                 if ((value as UnityEngine.Object) == null)
                     return ;
-
-                ObjectWrapper wrapper = new ObjectWrapper { value = value as UnityEngine.Object };
-                serializedValue = JsonUtility.ToJson(wrapper);
+                
+                serializedObjectValue = new SerializedObject { value = value as UnityEngine.Object };
             }
             else if (value is string)
                 serializedValue = "\"" + ((string)value).Replace("\"", "\\\"") + "\"";
             else
             {
                 try {
-                    serializedValue = JsonUtility.ToJson(value);
-                    if (String.IsNullOrEmpty(serializedValue))
-                        throw new Exception();
+                    if(value is AnimationCurve)
+                    {
+                        serializedObjectValue = new SerializedAnimationCurve { value = value as AnimationCurve};
+                    } else if(value is Color)
+                    {
+                        serializedObjectValue = new SerializedColor { value = value as Color? ?? new Color()};
+                    } else if(value is Vector2)
+                    {
+                        serializedObjectValue = new SerializedVector2 { value = (Vector2) value};
+                    }
+                    else if(value is Vector3)
+                    {
+                        serializedObjectValue = new SerializedVector3 { value = value as Vector3? ?? new Vector3()};
+                    }
+                    else
+                    {
+                        serializedValue = JsonUtility.ToJson(value);
+                        if(String.IsNullOrEmpty(serializedValue))
+                            throw new Exception();
+                    }
                 } catch {
                     Debug.LogError("Can't serialize type " + serializedType);
                 }
