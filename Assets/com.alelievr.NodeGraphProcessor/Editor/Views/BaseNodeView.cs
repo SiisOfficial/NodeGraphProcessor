@@ -46,6 +46,25 @@ namespace GraphProcessor
 
 		[System.NonSerialized]
 		List< IconBadge >						badges = new List< IconBadge >();
+		
+		private List<Node> selectedNodes = new List<Node>();
+		private float selectedNodesFarLeft;
+		private float selectedNodesNearLeft;
+		private float selectedNodesFarRight;
+		private float selectedNodesNearRight;
+		private float selectedNodesFarTop;
+		private float selectedNodesNearTop;
+		private float selectedNodesFarBottom;
+		private float selectedNodesNearBottom;
+		private float selectedNodesAvgHorizontal;
+		private float selectedNodesAvgVertical;
+		private float selectedNodesLongestWidth;
+		private float selectedNodesShortestWidth;
+		private float selectedNodesAvgWidth;
+		private float selectedNodesLongestHeight;
+		private float selectedNodesShortestHeight;
+		private float selectedNodesAvgHeight;
+		
 
 			#region  Initialization
 
@@ -235,6 +254,128 @@ namespace GraphProcessor
 			ports.Remove(p);
 		}
 
+		private void SetSelectedNodeVariables()
+		{
+			owner.nodes.ForEach(node =>
+			{
+				if(node.selected) selectedNodes.Add(node);
+			});
+
+			selectedNodesFarLeft = int.MinValue;
+			selectedNodesFarRight = int.MinValue;
+			selectedNodesFarTop = int.MinValue;
+			selectedNodesFarBottom = int.MinValue;
+			selectedNodesLongestWidth = 0;
+			selectedNodesLongestHeight = 0;
+
+			selectedNodesNearLeft = int.MaxValue;
+			selectedNodesNearRight = int.MaxValue;
+			selectedNodesNearTop = int.MaxValue;
+			selectedNodesNearBottom = int.MaxValue;
+			selectedNodesShortestWidth = 1000;
+			selectedNodesShortestHeight = 1000;
+			
+			foreach(var selectedNode in selectedNodes)
+			{
+				var nStyle = selectedNode.style;
+				var wd = selectedNode.localBound.size.x;
+				var hg = selectedNode.localBound.size.y;
+				
+				if(nStyle.left.value.value > selectedNodesFarLeft) selectedNodesFarLeft = nStyle.left.value.value;
+				if(nStyle.left.value.value + wd > selectedNodesFarRight) selectedNodesFarRight = nStyle.left.value.value + wd;
+				if(nStyle.top.value.value > selectedNodesFarTop) selectedNodesFarTop = nStyle.top.value.value;
+				if(nStyle.top.value.value + hg > selectedNodesFarBottom) selectedNodesFarBottom = nStyle.top.value.value + hg;
+				if(wd > selectedNodesLongestWidth) selectedNodesLongestWidth = wd;
+				if(hg > selectedNodesLongestHeight) selectedNodesLongestHeight = hg;
+				
+				if(nStyle.left.value.value < selectedNodesNearLeft) selectedNodesNearLeft = nStyle.left.value.value;
+				if(nStyle.left.value.value + wd < selectedNodesNearRight) selectedNodesNearRight = nStyle.left.value.value + wd;
+				if(nStyle.top.value.value < selectedNodesNearTop) selectedNodesNearTop = nStyle.top.value.value;
+				if(nStyle.top.value.value + hg < selectedNodesNearBottom) selectedNodesNearBottom = nStyle.top.value.value + hg;
+				if(wd < selectedNodesShortestWidth) selectedNodesShortestWidth = wd;
+				if(hg < selectedNodesShortestHeight) selectedNodesShortestHeight = hg;
+			}
+			
+			selectedNodesAvgHorizontal   = (selectedNodesNearLeft + selectedNodesFarRight) / 2f;
+			selectedNodesAvgVertical    = (selectedNodesNearTop + selectedNodesFarBottom) / 2f;
+			selectedNodesAvgWidth  = (selectedNodesLongestWidth + selectedNodesShortestWidth) / 2f;
+			selectedNodesAvgHeight = (selectedNodesLongestHeight + selectedNodesShortestHeight) / 2f;
+		}
+
+		public Rect GetNodeRect(Node node, float left = int.MaxValue, float top = int.MaxValue)
+		{
+			return new Rect(
+				new Vector2(left != int.MaxValue ? left : node.style.left.value.value, top != int.MaxValue ? top : node.style.top.value.value),
+				new Vector2(node.style.width.value.value, node.style.height.value.value)
+			);
+		}
+
+		public void AlignToLeft()
+		{
+			SetSelectedNodeVariables();
+			if(selectedNodes.Count < 2) return;
+
+			foreach(var selectedNode in selectedNodes)
+			{
+				selectedNode.SetPosition(GetNodeRect(selectedNode, selectedNodesNearLeft));
+			}
+		}
+
+		public void AlignToCenter()
+		{
+			SetSelectedNodeVariables();
+			if(selectedNodes.Count < 2) return;
+
+			foreach(var selectedNode in selectedNodes)
+			{
+				selectedNode.SetPosition(GetNodeRect(selectedNode, selectedNodesAvgHorizontal - selectedNode.localBound.size.x / 2f));
+			}
+		}
+
+		public void AlignToRight()
+		{
+			SetSelectedNodeVariables();
+			if(selectedNodes.Count < 2) return;
+			
+			foreach(var selectedNode in selectedNodes)
+			{
+				selectedNode.SetPosition(GetNodeRect(selectedNode, selectedNodesFarRight - selectedNode.localBound.size.x));
+			}
+		}
+
+		public void AlignToTop()
+		{
+			SetSelectedNodeVariables();
+			if(selectedNodes.Count < 2) return;
+
+			foreach(var selectedNode in selectedNodes)
+			{
+				selectedNode.SetPosition(GetNodeRect(selectedNode, top: selectedNodesNearTop));
+			}
+		}
+
+		public void AlignToMiddle()
+		{
+			SetSelectedNodeVariables();
+			if(selectedNodes.Count < 2) return;
+
+			foreach(var selectedNode in selectedNodes)
+			{
+				selectedNode.SetPosition(GetNodeRect(selectedNode, top: selectedNodesAvgVertical - selectedNode.localBound.size.y / 2f));
+			}
+		}
+
+		public void AlignToBottom()
+		{
+			SetSelectedNodeVariables();
+			if(selectedNodes.Count < 2) return;
+			
+			foreach(var selectedNode in selectedNodes)
+			{
+				selectedNode.SetPosition(GetNodeRect(selectedNode, top: selectedNodesFarBottom - selectedNode.localBound.size.y));
+			}
+		}
+		
 		public void OpenNodeViewScript()
 		{
 			var scriptPath = NodeProvider.GetNodeViewScript(GetType());
@@ -413,6 +554,17 @@ namespace GraphProcessor
 
         public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
 		{
+			//	Align
+			evt.menu.AppendAction("Align/To Left", (e) => AlignToLeft(), AlignToLeftStatus);
+			evt.menu.AppendAction("Align/To Center", (e) => AlignToCenter(), AlignToCenterStatus);
+			evt.menu.AppendAction("Align/To Right", (e) => AlignToRight(), AlignToRightStatus);
+			evt.menu.AppendSeparator("Align/");
+			evt.menu.AppendAction("Align/To Top", (e) => AlignToTop(), AlignToTopStatus);
+			evt.menu.AppendAction("Align/To Middle", (e) => AlignToMiddle(), AlignToMiddleStatus);
+			evt.menu.AppendAction("Align/To Bottom", (e) => AlignToBottom(), AlignToBottomStatus);
+			evt.menu.AppendSeparator();
+			//	Align
+			
 			evt.menu.AppendAction("Open Node Script", (e) => OpenNodeScript(), OpenNodeScriptStatus);
 			evt.menu.AppendAction("Open Node View Script", (e) => OpenNodeViewScript(), OpenNodeViewScriptStatus);
 			evt.menu.AppendAction("Debug", (e) => ToggleDebug(), DebugStatus);
@@ -430,6 +582,48 @@ namespace GraphProcessor
 			if (nodeTarget.debug)
 				return Status.Checked;
 			return Status.Normal;
+		}
+
+		Status AlignToLeftStatus(DropdownMenuAction action)
+		{
+			if (NodeProvider.GetNodeScript(nodeTarget.GetType()) != null)
+				return Status.Normal;
+			return Status.Disabled;
+		}
+
+		Status AlignToCenterStatus(DropdownMenuAction action)
+		{
+			if (NodeProvider.GetNodeScript(nodeTarget.GetType()) != null)
+				return Status.Normal;
+			return Status.Disabled;
+		}
+
+		Status AlignToRightStatus(DropdownMenuAction action)
+		{
+			if (NodeProvider.GetNodeScript(nodeTarget.GetType()) != null)
+				return Status.Normal;
+			return Status.Disabled;
+		}
+
+		Status AlignToTopStatus(DropdownMenuAction action)
+		{
+			if (NodeProvider.GetNodeScript(nodeTarget.GetType()) != null)
+				return Status.Normal;
+			return Status.Disabled;
+		}
+
+		Status AlignToMiddleStatus(DropdownMenuAction action)
+		{
+			if (NodeProvider.GetNodeScript(nodeTarget.GetType()) != null)
+				return Status.Normal;
+			return Status.Disabled;
+		}
+
+		Status AlignToBottomStatus(DropdownMenuAction action)
+		{
+			if (NodeProvider.GetNodeScript(nodeTarget.GetType()) != null)
+				return Status.Normal;
+			return Status.Disabled;
 		}
 
 		Status OpenNodeScriptStatus(DropdownMenuAction action)
