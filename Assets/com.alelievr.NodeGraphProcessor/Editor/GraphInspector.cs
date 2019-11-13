@@ -46,7 +46,9 @@ namespace GraphProcessor
         protected void FillExposedParameters(VisualElement parameterContainer)
         {
             if (graph.exposedParameters.Count != 0)
+            if(graph.exposedParameters.Count != 0)
                 parameterContainer.Add(new Label("Exposed Parameters:"));
+            else return;
 
             var hasHidden = false;
             
@@ -78,60 +80,60 @@ namespace GraphProcessor
                 VisualElement prop = new VisualElement();
                 prop.style.display = DisplayStyle.Flex;
                 Type paramType = Type.GetType(param.type);
-                if(param.serializedValue.serializedObjectValue is SerializableObject.SerializedObject serializedObjectValue)
-                {
-                    var field = FieldFactory.CreateField(paramType, serializedObjectValue.value, (newValue) =>
-                    {
-                        Undo.RegisterCompleteObjectUndo(graph, "Changed Parameter " + param.name + " to " + newValue);
-                       serializedObjectValue.value = newValue as UnityEngine.Object;
-                    }, param.name);
-                    prop.Add(field);
-                } 
-                else if(param.serializedValue.serializedObjectValue is SerializableObject.SerializedVector2 serializedVector2Value)
-                {
-                    var field = FieldFactory.CreateField(paramType, serializedVector2Value.value, (newValue) =>
-                    {
-                        Undo.RegisterCompleteObjectUndo(graph, "Changed Parameter " + param.name + " to " + newValue);
-                        (param.serializedValue.serializedObjectValue as SerializableObject.SerializedVector2).value = (Vector2) newValue;
-                    }, param.name);
-                    prop.Add(field);
-                }
-                else if(param.serializedValue.serializedObjectValue is SerializableObject.SerializedVector3 serializedVector3Value)
-                {
-                    var field = FieldFactory.CreateField(paramType, serializedVector3Value.value, (newValue) =>
-                    {
-                        Undo.RegisterCompleteObjectUndo(graph, "Changed Parameter " + param.name + " to " + newValue);
-                        serializedVector3Value.value = newValue as Vector3? ?? new Vector3();
-                    }, param.name);
-                    prop.Add(field);
-                }
-                else if(param.serializedValue.serializedObjectValue is SerializableObject.SerializedColor serializedColorValue)
-                {
-                    var field = FieldFactory.CreateField(paramType, serializedColorValue.value, (newValue) =>
-                    {
-                        Undo.RegisterCompleteObjectUndo(graph, "Changed Parameter " + param.name + " to " + newValue);
-                        serializedColorValue.value = newValue is Color value ? value : new Color();
-                    }, param.name);
-                    prop.Add(field);
-                }
-                else if(param.serializedValue.serializedObjectValue is SerializableObject.SerializedAnimationCurve serializedAnimationCurveValue)
-                {
-                    var field = FieldFactory.CreateField(paramType, serializedAnimationCurveValue.value, (newValue) =>
-                    {
-                        Undo.RegisterCompleteObjectUndo(graph, "Changed Parameter " + param.name + " to " + newValue);
-                        serializedAnimationCurveValue.value = newValue as AnimationCurve;
-                    }, param.name);
-                    prop.Add(field);
-                }
-                else
-                {
+//                if(param.serializedValue.serializedObjectValue is SerializableObject.SerializedObject serializedObjectValue)
+//                {
+//                    var field = FieldFactory.CreateField(paramType, serializedObjectValue.value, (newValue) =>
+//                    {
+//                        Undo.RegisterCompleteObjectUndo(graph, "Changed Parameter " + param.name + " to " + newValue);
+//                       serializedObjectValue.value = newValue as UnityEngine.Object;
+//                    }, param.name);
+//                    prop.Add(field);
+//                } 
+//                else if(param.serializedValue.serializedObjectValue is SerializableObject.SerializedVector2 serializedVector2Value)
+//                {
+//                    var field = FieldFactory.CreateField(paramType, serializedVector2Value.value, (newValue) =>
+//                    {
+//                        Undo.RegisterCompleteObjectUndo(graph, "Changed Parameter " + param.name + " to " + newValue);
+//                        (param.serializedValue.serializedObjectValue as SerializableObject.SerializedVector2).value = (Vector2) newValue;
+//                    }, param.name);
+//                    prop.Add(field);
+//                }
+//                else if(param.serializedValue.serializedObjectValue is SerializableObject.SerializedVector3 serializedVector3Value)
+//                {
+//                    var field = FieldFactory.CreateField(paramType, serializedVector3Value.value, (newValue) =>
+//                    {
+//                        Undo.RegisterCompleteObjectUndo(graph, "Changed Parameter " + param.name + " to " + newValue);
+//                        serializedVector3Value.value = newValue as Vector3? ?? new Vector3();
+//                    }, param.name);
+//                    prop.Add(field);
+//                }
+//                else if(param.serializedValue.serializedObjectValue is SerializableObject.SerializedColor serializedColorValue)
+//                {
+//                    var field = FieldFactory.CreateField(paramType, serializedColorValue.value, (newValue) =>
+//                    {
+//                        Undo.RegisterCompleteObjectUndo(graph, "Changed Parameter " + param.name + " to " + newValue);
+//                        serializedColorValue.value = newValue is Color value ? value : new Color();
+//                    }, param.name);
+//                    prop.Add(field);
+//                }
+//                else if(param.serializedValue.serializedObjectValue is SerializableObject.SerializedAnimationCurve serializedAnimationCurveValue)
+//                {
+//                    var field = FieldFactory.CreateField(paramType, serializedAnimationCurveValue.value, (newValue) =>
+//                    {
+//                        Undo.RegisterCompleteObjectUndo(graph, "Changed Parameter " + param.name + " to " + newValue);
+//                        serializedAnimationCurveValue.value = newValue as AnimationCurve;
+//                    }, param.name);
+//                    prop.Add(field);
+//                }
+//                else
+//                {
                     var field = FieldFactory.CreateField(paramType, param.serializedValue.value, (newValue) =>
                     {
                         Undo.RegisterCompleteObjectUndo(graph, "Changed Parameter " + param.name + " to " + newValue);
                         param.serializedValue.value = newValue;
                     }, param.name);
                     prop.Add(field);
-                }
+//                }
 
                 parameterContainer.Add(prop);
         }

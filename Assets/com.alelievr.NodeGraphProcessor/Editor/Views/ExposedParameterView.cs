@@ -82,6 +82,8 @@ namespace GraphProcessor
             graphView.onExposedParameterListChanged += UpdateParameterList;
             graphView.initialized += UpdateParameterList;
 
+            UpdateParameterList();
+
             // Add exposed parameter button
             header.Add(new Button(OnAddClicked){
                 text = "+"

@@ -94,6 +94,36 @@ namespace GraphProcessor
             if (!adaptersLoaded)
                 LoadAllAdapters();
 
+            if(from.Namespace == "System.Collections.Generic")
+            {
+                var split = from.ToString().Split('[');
+                var stringType = split[1].Substring(0, split[1].Length - 1);
+
+                if(stringType.Split('.')[0] == "UnityEngine")
+                {
+                    from = Type.GetType(stringType + ", UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null");
+                }
+                else if(Type.GetType(stringType) != null)
+                {
+                    from = Type.GetType(stringType);
+                }
+            }
+            
+            if(to.Namespace == "System.Collections.Generic")
+            {
+                var split = to.ToString().Split('[');
+                var stringType = split[1].Substring(0, split[1].Length - 1);
+
+                if(stringType.Split('.')[0] == "UnityEngine")
+                {
+                    to = Type.GetType(stringType + ", UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null");
+                }
+                else if(Type.GetType(stringType) != null)
+                {
+                    to = Type.GetType(stringType);
+                }
+            }
+            
             return adapters.ContainsKey((from, to));
         }
 
