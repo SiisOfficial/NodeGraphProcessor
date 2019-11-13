@@ -82,6 +82,8 @@ namespace GraphProcessor
 		bool _isEnabled = false;
 		public bool isEnabled { get => _isEnabled; private set => _isEnabled = value; }
 
+		[SerializeReference] private SerializableObject.SerializedValueBase thisIsJustForToTriggerSerializeReference;
+
         protected virtual void OnEnable()
         {
 			Deserialize();

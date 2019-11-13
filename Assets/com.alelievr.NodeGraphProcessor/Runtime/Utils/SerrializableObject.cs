@@ -52,7 +52,7 @@ namespace GraphProcessor
             public Color value;
         }
         
-        //[SerializeReference] public SerializedValueBase serializedObjectValue;
+        [SerializeReference] public SerializedValueBase serializedObjectValue;
         
         #endregion
 
@@ -88,7 +88,7 @@ namespace GraphProcessor
             }
             else if (typeof(UnityEngine.Object).IsAssignableFrom(type))
             {
-                //value = (serializedObjectValue as SerializedObject)?.value;
+                value = (serializedObjectValue as SerializedObject)?.value;
             }
             else if (type == typeof(string))
                 value = serializedValue.Length > 1 ? serializedValue.Substring(1, serializedValue.Length - 2).Replace("\\\"", "\"") : "";
@@ -97,19 +97,19 @@ namespace GraphProcessor
                 try {
                     if(typeof(AnimationCurve).IsAssignableFrom(type))
                     {
-//                        value = (serializedObjectValue as SerializedAnimationCurve)?.value;
+                        value = (serializedObjectValue as SerializedAnimationCurve)?.value;
                     }
                     else if(typeof(Vector2).IsAssignableFrom(type))
                     {
-//                        value = (serializedObjectValue as SerializedVector2)?.value;
+                        value = (serializedObjectValue as SerializedVector2)?.value;
                     }
                     else if(typeof(Vector3).IsAssignableFrom(type))
                     {
-//                        value = (serializedObjectValue as SerializedVector3)?.value;
+                        value = (serializedObjectValue as SerializedVector3)?.value;
                     }
                     else if(typeof(Color).IsAssignableFrom(type))
                     {
-//                        value = (serializedObjectValue as SerializedColor)?.value;
+                        value = (serializedObjectValue as SerializedColor)?.value;
                     }
                     else
                     {
@@ -137,7 +137,7 @@ namespace GraphProcessor
                 if ((value as UnityEngine.Object) == null)
                     return ;
                 
-//                serializedObjectValue = new SerializedObject { value = value as UnityEngine.Object };
+                serializedObjectValue = new SerializedObject { value = value as UnityEngine.Object };
             }
             else if (value is string)
                 serializedValue = "\"" + ((string)value).Replace("\"", "\\\"") + "\"";
@@ -146,17 +146,17 @@ namespace GraphProcessor
                 try {
                     if(value is AnimationCurve)
                     {
-//                        serializedObjectValue = new SerializedAnimationCurve { value = value as AnimationCurve};
+                        serializedObjectValue = new SerializedAnimationCurve { value = value as AnimationCurve};
                     } else if(value is Color)
                     {
-//                        serializedObjectValue = new SerializedColor { value = value as Color? ?? new Color()};
+                        serializedObjectValue = new SerializedColor { value = value as Color? ?? new Color()};
                     } else if(value is Vector2)
                     {
-//                        serializedObjectValue = new SerializedVector2 { value = (Vector2) value};
+                        serializedObjectValue = new SerializedVector2 { value = (Vector2) value};
                     }
                     else if(value is Vector3)
                     {
-//                        serializedObjectValue = new SerializedVector3 { value = value as Vector3? ?? new Vector3()};
+                        serializedObjectValue = new SerializedVector3 { value = value as Vector3? ?? new Vector3()};
                     }
                     else
                     {
