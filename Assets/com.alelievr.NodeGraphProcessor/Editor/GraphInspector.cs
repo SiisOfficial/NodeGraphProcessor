@@ -45,7 +45,6 @@ namespace GraphProcessor
 
         protected void FillExposedParameters(VisualElement parameterContainer)
         {
-            if (graph.exposedParameters.Count != 0)
             if(graph.exposedParameters.Count != 0)
                 parameterContainer.Add(new Label("Exposed Parameters:"));
             else return;
