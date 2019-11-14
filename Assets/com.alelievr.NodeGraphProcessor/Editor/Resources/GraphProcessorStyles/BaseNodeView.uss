@@ -130,3 +130,21 @@ ParameterNodeView #controls EnumField > VisualElement > VisualElement {
 #input > .port, #output > .port {
     height: 22px;
 }
+
+.centered-input-label {
+    position: absolute;
+    left: 20px;
+    top: 9px;
+    padding-left: 0;
+    padding-right: 0;
+    font-size: 20px;
+}
+#input.labelless {
+    width: 44px;
+}
+#output.centered-output {
+    justify-content: center;
+}
+#output.centered-output Label {
+    margin-top: -2px;
+}
