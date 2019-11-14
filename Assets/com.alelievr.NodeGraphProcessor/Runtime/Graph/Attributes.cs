@@ -23,11 +23,13 @@ namespace GraphProcessor
 	{
 		public string		name;
 		public bool			allowMultiple = true;
+		public bool			allowCast = true;
 
-		public OutputAttribute(string name = null, bool allowMultiple = true)
+		public OutputAttribute(string name = null, bool allowMultiple = true, bool allowCast = true)
 		{
 			this.name = name;
 			this.allowMultiple = allowMultiple;
+			this.allowCast = allowCast;
 		}
 	}
 
