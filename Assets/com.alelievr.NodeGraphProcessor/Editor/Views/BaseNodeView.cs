@@ -506,8 +506,11 @@ namespace GraphProcessor
 				field.SetValue(nodeTarget, newValue);
 			}, label);
 
-			if (element != null)
+			if(element != null)
+			{
+				controlsContainer.AddToClassList("has-control");
 				controlsContainer.Add(element);
+			}
 		}
 
 		internal void OnPortConnected(PortView port)

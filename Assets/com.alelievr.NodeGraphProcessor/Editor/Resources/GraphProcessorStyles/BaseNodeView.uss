@@ -14,18 +14,18 @@
 }
 
 #settings-button > #icon {
-    background-image : resource("Icons/SettingsIcons");
+    background-image: resource("Icons/SettingsIcons");
     flex-grow: 1;
 }
 
 #settings-button:hover > #icon {
     background-color: #2B2B2B;
-    background-image : resource("Icons/SettingsIcons");
+    background-image: resource("Icons/SettingsIcons");
 }
 
 #settings-button.clicked > #icon {
     background-color: #2B2B2B;
-    background-image : resource("Icons/SettingsIcons");
+    background-image: resource("Icons/SettingsIcons");
     visibility: visible;
 }
 
@@ -139,12 +139,38 @@ ParameterNodeView #controls EnumField > VisualElement > VisualElement {
     padding-right: 0;
     font-size: 20px;
 }
+
 #input.labelless {
     width: 44px;
 }
+
 #output.centered-output {
     justify-content: center;
 }
+
 #output.centered-output Label {
     margin-top: -2px;
+}
+
+#controls.has-control {
+    padding-top: 3px;
+}
+
+#controls > * {
+    margin-right: 4px;
+    margin-left: 4px;
+}
+
+#controls Label {
+    min-width: 70px;
+    padding-left: 3px;
+}
+
+#controls TextInput {
+    min-width: 60px;
+    margin-right: 3px;
+}
+
+.port-button-container {
+    flex-direction: row;
 }
