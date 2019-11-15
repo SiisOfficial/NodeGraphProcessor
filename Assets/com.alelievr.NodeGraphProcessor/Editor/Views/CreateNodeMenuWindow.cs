@@ -48,37 +48,38 @@ namespace GraphProcessor
             var nodeEntries = graphView.FilterCreateNodeMenuEntries().OrderBy(k => k.Key);
             var titles = new HashSet< string >();
 
-            //    TODO: Burası 3 kademeli hale getirilecek. Şu anda çok manuel olarak 2 kademeli oluyor en fazla.
 			foreach (var nodeMenuItem in nodeEntries)
 			{
-                string  nodePath = nodeMenuItem.Key;
-                int     pos = nodePath.LastIndexOf("/", StringComparison.Ordinal);
-                string  title = null;
-                int     level = nodePath.Count(c => c == '/');
-                string  nodeName = nodePath;
+                var nodePath = nodeMenuItem.Key;
+                var nodeName = nodePath;
+                var level = 0;
+                var parts = nodePath.Split('/');
 
-                if (pos > 0)
+                if(parts.Length > 1)
                 {
-                    title = nodePath.Substring(0, pos);
-                    nodeName = nodePath.Substring(pos + 1);
+                    level++;
+                    nodeName = parts[parts.Length - 1];
+                    for(var i = 0; i < parts.Length - 1; i++)
+                    {
+                        var title = parts[i];
+                        // Add section title if the node is in subcategory
+                        if (!titles.Contains(title))
+                        {
+                            level = i + 1;
+                            tree.Add(new SearchTreeGroupEntry(new GUIContent(title)){
+                                level = level
+                            });
+                            titles.Add(title);
+                        }
+                    }
                 }
-
-                // Add section title if the node is in subcategory
-                if (title != null && !titles.Contains(title))
-                {
-                    level = nodePath.Count(c => c == '/');
-                    tree.Add(new SearchTreeGroupEntry(new GUIContent(title)){
-                        level = level,
-                    });
-                    titles.Add(title);
-                }
-
+                
                 tree.Add(new SearchTreeEntry(new GUIContent(nodeName, icon))
                 {
                     level = level + 1,
                     userData = nodeMenuItem.Value
                 });
-			}
+            }
 
             return tree;
         }
