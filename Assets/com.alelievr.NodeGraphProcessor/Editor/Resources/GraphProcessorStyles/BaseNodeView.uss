@@ -154,6 +154,7 @@ ParameterNodeView #controls EnumField > VisualElement > VisualElement {
 
 #controls.has-control {
     padding-top: 3px;
+    padding-bottom: 3px;
 }
 
 #controls > * {
@@ -162,12 +163,18 @@ ParameterNodeView #controls EnumField > VisualElement > VisualElement {
 }
 
 #controls Label {
-    min-width: 70px;
+    min-width: 60px;
     padding-left: 3px;
+    padding-right: 5px;
 }
 
 #controls TextInput {
     min-width: 60px;
+    margin-right: 3px;
+}
+
+#controls FloatInput {
+    min-width: 30px;
     margin-right: 3px;
 }
 

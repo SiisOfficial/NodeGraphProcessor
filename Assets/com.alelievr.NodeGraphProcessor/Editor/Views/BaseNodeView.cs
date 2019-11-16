@@ -5,7 +5,9 @@ using UnityEngine.UIElements;
 using UnityEditor;
 using System.Reflection;
 using System;
+using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEditorInternal;
 
 using Status = UnityEngine.UIElements.DropdownMenuAction.Status;
@@ -489,7 +491,19 @@ namespace GraphProcessor
                 if (field.GetCustomAttribute(typeof(System.NonSerializedAttribute)) != null || field.GetCustomAttribute(typeof(HideInInspector)) != null)
                     continue ;
 
-				AddControlField(field, field.Name);
+				var fieldName = Regex.Replace( 
+					Regex.Replace( 
+						field.Name, 
+						@"(\P{Ll})(\P{Ll}\p{Ll})", 
+						"$1 $2" 
+					), 
+					@"(\p{Ll})(\P{Ll})", 
+					"$1 $2" 
+				);
+
+				fieldName = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(fieldName);
+				
+				AddControlField(field, fieldName);
 			}
 		}
 

@@ -13,7 +13,7 @@ namespace GraphProcessor
 		[Input]
 		public object input;
 
-		[Output]
+		[Output(allowCast = true)]
 		public object output;
 
 		public override string name => "Parameter";

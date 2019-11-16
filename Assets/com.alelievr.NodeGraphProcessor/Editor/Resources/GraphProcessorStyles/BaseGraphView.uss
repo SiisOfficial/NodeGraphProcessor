@@ -132,3 +132,77 @@ ParameterNodeView.parameter-String #parameterIcon, ExposedParameterFieldView.par
 /**
     ICONS
  */
+
+
+/**
+    Colors
+ */
+
+ExposedParameterFieldView.parameter-String #node-border {
+    border-color: #fcffc8;
+}
+
+ExposedParameterFieldView.parameter-Vector3 #node-border {
+    border-color: #d24838;
+}
+
+ExposedParameterFieldView.parameter-Vector2 #node-border {
+    border-color: #de755e;
+}
+
+ExposedParameterFieldView.parameter-Single #node-border {
+    border-color: #2080FF;
+}
+
+ExposedParameterFieldView.parameter-Int32 #node-border {
+    border-color: #1346ca;
+}
+
+ExposedParameterFieldView.parameter-Boolean #node-border {
+    border-color: #ef7800;
+}
+
+ExposedParameterFieldView.parameter-Object #node-border {
+    border-color: #ffac4c;
+}
+
+ExposedParameterFieldView.parameter-Color #node-border {
+    border-color: #ff638e;
+}
+
+ExposedParameterFieldView.parameter-GameObject #node-border {
+    border-color: #FF0000;
+}
+
+ExposedParameterFieldView.parameter-Rigidbody #node-border {
+    border-color: #66dd00;
+}
+
+ExposedParameterFieldView.parameter-Collider #node-border {
+    border-color: #55c129;
+}
+
+ExposedParameterFieldView.parameter-AnimationCurve #node-border {
+    border-color: #0f3311;
+}
+
+ExposedParameterFieldView.parameter-Animator #node-border {
+    border-color: #427ad2;
+}
+
+ExposedParameterFieldView.parameter-Material #node-border {
+    border-color: #6155d7;
+}
+
+ExposedParameterFieldView.parameter-AudioSource #node-border {
+    border-color: #b9a045;
+}
+
+ExposedParameterFieldView.parameter-AudioClip #node-border {
+    border-color: #daa230;
+}
+
+/**
+    Colors
+ */
+
