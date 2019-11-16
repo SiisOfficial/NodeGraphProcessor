@@ -62,10 +62,10 @@ namespace GraphProcessor
                     for(var i = 0; i < parts.Length - 1; i++)
                     {
                         var title = parts[i];
+                        level = i + 1;
                         // Add section title if the node is in subcategory
                         if (!titles.Contains(title))
                         {
-                            level = i + 1;
                             tree.Add(new SearchTreeGroupEntry(new GUIContent(title)){
                                 level = level
                             });
