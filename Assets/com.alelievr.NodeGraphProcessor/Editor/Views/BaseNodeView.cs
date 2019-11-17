@@ -62,10 +62,8 @@ namespace GraphProcessor
 		private float selectedNodesAvgVertical;
 		private float selectedNodesLongestWidth;
 		private float selectedNodesShortestWidth;
-		private float selectedNodesAvgWidth;
 		private float selectedNodesLongestHeight;
 		private float selectedNodesShortestHeight;
-		private float selectedNodesAvgHeight;
 		
 
 			#region  Initialization
@@ -258,6 +256,7 @@ namespace GraphProcessor
 
 		private void SetSelectedNodeVariables()
 		{
+			selectedNodes = new List<Node>();
 			owner.nodes.ForEach(node =>
 			{
 				if(node.selected) selectedNodes.Add(node);
@@ -300,11 +299,9 @@ namespace GraphProcessor
 			
 			selectedNodesAvgHorizontal   = (selectedNodesNearLeft + selectedNodesFarRight) / 2f;
 			selectedNodesAvgVertical    = (selectedNodesNearTop + selectedNodesFarBottom) / 2f;
-			selectedNodesAvgWidth  = (selectedNodesLongestWidth + selectedNodesShortestWidth) / 2f;
-			selectedNodesAvgHeight = (selectedNodesLongestHeight + selectedNodesShortestHeight) / 2f;
 		}
 
-		public Rect GetNodeRect(Node node, float left = int.MaxValue, float top = int.MaxValue)
+		private static Rect GetNodeRect(Node node, float left = int.MaxValue, float top = int.MaxValue)
 		{
 			return new Rect(
 				new Vector2(left != int.MaxValue ? left : node.style.left.value.value, top != int.MaxValue ? top : node.style.top.value.value),
