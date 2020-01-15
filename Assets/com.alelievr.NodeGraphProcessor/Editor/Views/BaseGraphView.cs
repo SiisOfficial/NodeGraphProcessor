@@ -26,7 +26,14 @@ namespace GraphProcessor
 		public List< BaseNodeView >					nodeViews = new List< BaseNodeView >();
 		public Dictionary< BaseNode, BaseNodeView >	nodeViewsPerNode = new Dictionary< BaseNode, BaseNodeView >();
 		public List< EdgeView >						edgeViews = new List< EdgeView >();
-        public List< CommentBlockView >         	commentBlockViews = new List< CommentBlockView >();
+        public List< GroupView >         	groupViews = new List< GroupView >();
+		
+		/// <summary>
+		/// List of all stack node views in the graph
+		/// </summary>
+		/// <typeparam name="BaseStackNodeView"></typeparam>
+		/// <returns></returns>
+		public List< BaseStackNodeView > stackNodeViews = new List< BaseStackNodeView >();
 
 		Dictionary< Type, PinnedElementView >		pinnedElements = new Dictionary< Type, PinnedElementView >();
 
@@ -54,6 +61,9 @@ namespace GraphProcessor
 			RegisterCallback< KeyDownEvent >(KeyDownCallback);
 			RegisterCallback< DragPerformEvent >(DragPerformedCallback);
 			RegisterCallback< DragUpdatedEvent >(DragUpdatedCallback);
+			RegisterCallback< MouseDownEvent >(MouseDownCallback);
+
+			InitializeManipulators();
 
 			SetupZoom(0.33f, 1.67f);
 
@@ -74,12 +84,12 @@ namespace GraphProcessor
 
 		protected override bool canCopySelection
 		{
-            get { return selection.Any(e => e is BaseNodeView || e is CommentBlockView); }
+            get { return selection.Any(e => e is BaseNodeView || e is GroupView); }
 		}
 
 		protected override bool canCutSelection
 		{
-            get { return selection.Any(e => e is BaseNodeView || e is CommentBlockView); }
+            get { return selection.Any(e => e is BaseNodeView || e is GroupView); }
 		}
 
 		string SerializeGraphElementsCallback(IEnumerable<GraphElement> elements)
@@ -92,10 +102,10 @@ namespace GraphProcessor
 				data.copiedNodes.Add(JsonSerializer.SerializeNode(node));
 			}
 
-			foreach (var commentBlockView in elements.Where(e => e is CommentBlockView))
+			foreach (var groupView in elements.Where(e => e is GroupView))
 			{
-				var commentBlock = (commentBlockView as CommentBlockView).commentBlock;
-				data.copiedCommentBlocks.Add(JsonSerializer.Serialize(commentBlock));
+				var group = (groupView as GroupView).group;
+				data.copiedGroups.Add(JsonSerializer.Serialize(group));
 			}
 
 
@@ -137,15 +147,12 @@ namespace GraphProcessor
 				AddToSelection(nodeViewsPerNode[node]);
 			}
 
-            foreach (var serializedCommentBlock in data.copiedCommentBlocks)
+			foreach (var serializedGroup in data.copiedGroups)
             {
-                var commentBlock = JsonSerializer.Deserialize<CommentBlock>(serializedCommentBlock);
-
-                //Same than for node
-                commentBlock.OnCreated();
-                commentBlock.position.position += new Vector2(20, 20);
-
-                AddCommentBlock(commentBlock);
+				var group = JsonSerializer.Deserialize<Group>(serializedGroup);
+				group.OnCreated();
+				group.position.position += new Vector2(20, 20);
+				AddGroup(group);
             }
 		}
 
@@ -157,32 +164,27 @@ namespace GraphProcessor
 
 				//Handle ourselves the edge and node remove
 				changes.elementsToRemove.RemoveAll(e => {
-					var edge = e as EdgeView;
-					var node = e as BaseNodeView;
-                    var commentBlock = e as CommentBlockView;
-					var blackboardField = e as ExposedParameterFieldView;
-
-					if (edge != null)
+					switch (e)
 					{
-						Disconnect(edge);
-						return true;
-					}
-					else if (node != null)
-					{
-						node.OnRemoved();
-						graph.RemoveNode(node.nodeTarget);
-						RemoveElement(node);
-						return true;
-					}
-                    else if (commentBlock != null)
-                    {
-                        graph.RemoveCommentBlock(commentBlock.commentBlock);
-                        RemoveElement(commentBlock);
-                        return true;
-                    }
-					else if (blackboardField != null)
-					{
-						graph.RemoveExposedParameter(blackboardField.parameter);
+						case EdgeView edge:
+							Disconnect(edge);
+							return true;
+						case BaseNodeView node:
+							node.OnRemoved();
+							graph.RemoveNode(node.nodeTarget);
+							RemoveElement(node);
+							return true;
+						case GroupView group:
+							graph.RemoveGroup(group.group);
+							RemoveElement(group);
+							return true;
+						case ExposedParameterFieldView blackboardField:
+							graph.RemoveExposedParameter(blackboardField.parameter);
+							return true;
+						case BaseStackNodeView stackNodeView:
+							graph.RemoveStackNode(stackNodeView.stackNode);
+							RemoveElement(stackNodeView);
+							return true;
 					}
 					return false;
 				});
@@ -212,10 +214,10 @@ namespace GraphProcessor
 
         void ElementResizedCallback(VisualElement elem)
         {
-            var commentBlockView = elem as CommentBlockView;
+			var groupView = elem as GroupView;
 
-            if (commentBlockView != null)
-                commentBlockView.commentBlock.size = commentBlockView.GetPosition().size;
+			if (groupView != null)
+				groupView.group.size = groupView.GetPosition().size;
         }
 
 		public override List< Port > GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
@@ -248,18 +250,18 @@ namespace GraphProcessor
 		/// <param name="evt"></param>
 		public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
 		{
-			BuildCommentBlockContextualMenu(evt);
-			BuildViewContextualMenu(evt);
+			BuildGroupContextualMenu(evt);
 			base.BuildContextualMenu(evt);
+			BuildViewContextualMenu(evt);
 			BuildSelectAssetContextualMenu(evt);
 			BuildSaveAssetContextualMenu(evt);
 			BuildHelpContextualMenu(evt);
 		}
 
-		protected void BuildCommentBlockContextualMenu(ContextualMenuPopulateEvent evt)
+		protected virtual void BuildGroupContextualMenu(ContextualMenuPopulateEvent evt)
 		{
-			Vector2 position = evt.mousePosition - (Vector2)viewTransform.position;
-            evt.menu.AppendAction("Comment Block", (e) => AddSelectionsToCommentBlock(AddCommentBlock(new CommentBlock("New Comment Block", position))), DropdownMenuAction.AlwaysEnabled);
+			Vector2 position = (evt.currentTarget as VisualElement).ChangeCoordinatesTo(contentViewContainer, evt.localMousePosition);
+			evt.menu.AppendAction("New Group", (e) => AddSelectionsToGroup(AddGroup(new Group("New Group", position))), DropdownMenuAction.AlwaysEnabled);
 		}
 
 		protected void BuildViewContextualMenu(ContextualMenuPopulateEvent evt)
@@ -267,12 +269,12 @@ namespace GraphProcessor
 			evt.menu.AppendAction("View/Processor", (e) => ToggleView< ProcessorView >(), (e) => GetPinnedElementStatus< ProcessorView >());
 		}
 
-		protected void BuildSelectAssetContextualMenu(ContextualMenuPopulateEvent evt)
+		protected virtual void BuildSelectAssetContextualMenu(ContextualMenuPopulateEvent evt)
 		{
 			evt.menu.AppendAction("Select Asset", (e) => EditorGUIUtility.PingObject(graph), DropdownMenuAction.AlwaysEnabled);
 		}
 
-		protected void BuildSaveAssetContextualMenu(ContextualMenuPopulateEvent evt)
+		protected virtual void BuildSaveAssetContextualMenu(ContextualMenuPopulateEvent evt)
 		{
 			evt.menu.AppendAction("Save Asset", (e) => {
 				EditorUtility.SetDirty(graph);
@@ -294,6 +296,16 @@ namespace GraphProcessor
 			{
 				SaveGraphToDisk();
 				e.StopPropagation();
+			}
+		}
+		
+		void MouseDownCallback(MouseDownEvent e)
+		{
+			// When left clicking on the graph (not a node or something else)
+			if (e.button == 0)
+			{
+				// Close all settings windows:
+				nodeViews.ForEach(v => v.CloseSettings());
 			}
 		}
 
@@ -350,13 +362,14 @@ namespace GraphProcessor
 			// Remove everything
 			RemoveNodeViews();
 			RemoveEdges();
-			RemoveCommentBlocks();
-
+			RemoveGroups();
+			
 			// And re-add with new up to date datas
 			InitializeNodeViews();
 			InitializeEdgeViews();
-            InitializeCommentBlocks();
-
+			InitializeGroups();
+			InitializeStackNodes();
+			
 			Reload();
 
 			UpdateComputeOrder();
@@ -378,7 +391,8 @@ namespace GraphProcessor
 			InitializeNodeViews();
 			InitializeEdgeViews();
 			InitializeViews();
-            InitializeCommentBlocks();
+			InitializeGroups();
+			InitializeStackNodes();
 
 			UpdateComputeOrder();
 
@@ -435,18 +449,23 @@ namespace GraphProcessor
 			}
 		}
 
-        void InitializeCommentBlocks()
+        void InitializeGroups()
         {
-            foreach (var commentBlock in graph.commentBlocks)
-                AddCommentBlockView(commentBlock);
+			foreach (var group in graph.groups)
+				AddGroupView(group);
         }
+
+		void InitializeStackNodes()
+		{
+			foreach (var stackNode in graph.stackNodes)
+				AddStackNodeView(stackNode);
+		}
 
 		protected virtual void InitializeManipulators()
 		{
 			this.AddManipulator(new ContentDragger());
 			this.AddManipulator(new SelectionDragger());
 			this.AddManipulator(new RectangleSelector());
-			this.AddManipulator(new ClickSelector());
 		}
 
 		protected virtual void Reload() {}
@@ -461,12 +480,12 @@ namespace GraphProcessor
 			graph.AddNode(node);
 
 			var view = AddNodeView(node);
-
-			UpdateComputeOrder();
-
+			
 			// Call create after the node have been initialized
 			view.OnCreated();
 
+			UpdateComputeOrder();
+			
 			return true;
 		}
 
@@ -502,32 +521,56 @@ namespace GraphProcessor
 			nodeViewsPerNode.Clear();
 		}
 
-        public CommentBlockView AddCommentBlock(CommentBlock block)
+        public GroupView AddGroup(Group block)
         {
-            graph.AddCommentBlock(block);
+			graph.AddGroup(block);
             block.OnCreated();
-            return AddCommentBlockView(block);
+            return AddGroupView(block);
         }
 
-		public CommentBlockView AddCommentBlockView(CommentBlock block)
+		public GroupView AddGroupView(Group block)
 		{
-			var c = new CommentBlockView();
+			var c = new GroupView();
 
 			c.Initialize(this, block);
 
 			AddElement(c);
 
-            commentBlockViews.Add(c);
+            groupViews.Add(c);
             return c;
 		}
+		
+		public BaseStackNodeView AddStackNode(BaseStackNode stackNode)
+		{
+			graph.AddStackNode(stackNode);
+			return AddStackNodeView(stackNode);
+		}
 
-        public void AddSelectionsToCommentBlock(CommentBlockView view)
+		public BaseStackNodeView AddStackNodeView(BaseStackNode stackNode)
+		{
+			var stackView = new BaseStackNodeView(stackNode);
+
+			AddElement(stackView);
+			stackNodeViews.Add(stackView);
+
+			stackView.Initialize(this);
+
+			return stackView;
+		} 
+
+		public void RemoveStackNodeView(BaseStackNodeView stackNodeView)
+		{
+			stackNodeViews.Remove(stackNodeView);
+			RemoveElement(stackNodeView);
+		}
+		
+        public void AddSelectionsToGroup(GroupView view)
         {
             foreach (var selectedNode in selection)
             {
                 if (selectedNode is BaseNodeView)
                 {
-                    if (commentBlockViews.Exists(x => x.ContainsElement(selectedNode as BaseNodeView)))
+                    if (groupViews.Exists(x => x.ContainsElement(selectedNode as BaseNodeView)))
                         continue;
 
                     view.AddElement(selectedNode as BaseNodeView);
@@ -535,11 +578,11 @@ namespace GraphProcessor
             }
         }
 
-		public void RemoveCommentBlocks()
+		public void RemoveGroups()
 		{
-			foreach (var commentBlockView in commentBlockViews)
-				RemoveElement(commentBlockView);
-			commentBlockViews.Clear();
+			foreach (var groupView in groupViews)
+				RemoveElement(groupView);
+			groupViews.Clear();
 		}
 
 		public bool ConnectView(EdgeView e, bool autoDisconnectInputs = true)
@@ -649,8 +692,9 @@ namespace GraphProcessor
 			if (e.userData is SerializableEdge serializableEdge)
 			{
 				graph.Disconnect(serializableEdge.GUID);
-				UpdateComputeOrder();
 			}
+			
+			UpdateComputeOrder();
 		}
 
 		public void RemoveEdges()
@@ -713,6 +757,8 @@ namespace GraphProcessor
 			if (!pinnedElements.ContainsKey(type))
 			{
 				view = Activator.CreateInstance(type) as PinnedElementView;
+				if (view == null)
+					return ;
 				pinnedElements[type] = view;
 				view.InitializeGraphView(elem, this);
 			}

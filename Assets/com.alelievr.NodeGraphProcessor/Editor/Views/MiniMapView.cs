@@ -9,7 +9,7 @@ namespace GraphProcessor
 {
 	public class MiniMapView : MiniMap
 	{
-		BaseGraphView	graphView;
+		new BaseGraphView	graphView;
 		Vector2			size;
 
 		public MiniMapView(BaseGraphView baseGraphView)

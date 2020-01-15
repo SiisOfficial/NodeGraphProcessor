@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using System;
+using UnityEngine.Serialization;
 
 namespace GraphProcessor
 {
@@ -32,8 +33,10 @@ namespace GraphProcessor
 		public SerializableEdge	addedEdge;
 		public BaseNode			removedNode;
 		public BaseNode			addedNode;
-		public CommentBlock		addedCommentBlock;
-		public CommentBlock		removedCommentBlock;
+		public Group		addedGroups;
+		public Group		removedGroups;
+		public BaseStackNode addedStackNode;
+		public BaseStackNode removedStackNode;
 	}
 
 	[System.Serializable]
@@ -56,8 +59,16 @@ namespace GraphProcessor
 		[System.NonSerialized]
 		public Dictionary< string, SerializableEdge >	edgesPerGUID = new Dictionary< string, SerializableEdge >();
 
-        [SerializeField]
-        public List< CommentBlock >                     commentBlocks = new List< CommentBlock >();
+        [SerializeField, FormerlySerializedAs("commentBlocks")]
+        public List< Group >                     groups = new List< Group >();
+		
+		/// <summary>
+		/// All Stack Nodes in the graph
+		/// </summary>
+		/// <typeparam name="stackNodes"></typeparam>
+		/// <returns></returns>
+		[SerializeField]
+		public List< BaseStackNode > stackNodes = new List< BaseStackNode >();
 
 		[SerializeField]
 		public List< PinnedElement >					pinnedElements = new List< PinnedElement >();
@@ -174,18 +185,38 @@ namespace GraphProcessor
 			});
 		}
 
-        public void AddCommentBlock(CommentBlock block)
+        public void AddGroup(Group block)
         {
-            commentBlocks.Add(block);
-			onGraphChanges?.Invoke(new GraphChanges{ addedCommentBlock = block });
+            groups.Add(block);
+			onGraphChanges?.Invoke(new GraphChanges{ addedGroups = block });
         }
 
-        public void RemoveCommentBlock(CommentBlock block)
+        public void RemoveGroup(Group block)
         {
-            commentBlocks.Remove(block);
-			onGraphChanges?.Invoke(new GraphChanges{ removedCommentBlock = block });
+            groups.Remove(block);
+			onGraphChanges?.Invoke(new GraphChanges{ removedGroups = block });
         }
 
+		/// <summary>
+		/// Add a StackNode
+		/// </summary>
+		/// <param name="stackNode"></param>
+		public void AddStackNode(BaseStackNode stackNode)
+		{
+			stackNodes.Add(stackNode);
+			onGraphChanges?.Invoke(new GraphChanges{ addedStackNode = stackNode });
+		}
+
+		/// <summary>
+		/// Remove a StackNode
+		/// </summary>
+		/// <param name="stackNode"></param>
+		public void RemoveStackNode(BaseStackNode stackNode)
+		{
+			stackNodes.Remove(stackNode);
+			onGraphChanges?.Invoke(new GraphChanges{ removedStackNode = stackNode });
+		}
+		
 		public PinnedElement OpenPinned(Type viewType)
 		{
 			var pinned = pinnedElements.Find(p => p.editorType.type == viewType);
