@@ -182,14 +182,35 @@ ParameterNodeView #controls EnumField > VisualElement > VisualElement {
     flex-direction: row;
 }
 
-#contents #top .executed #connector, #contents #top .executed #connector #cap,
-#contents #top .executes #connector, #contents #top .executes #connector #cap,
-#contents #top .true #connector, #contents #top .true #connector #cap,
-#contents #top .false #connector, #contents #top .false #connector #cap,
-#contents #top .loopBody #connector, #contents #top .loopBody #connector #cap,
-#contents #top .loopCompleted #connector, #contents #top .loopCompleted #connector #cap,
+#contents #top .executed #connector,
+#contents #top .executes #connector,
+#contents #top .true #connector,
+#contents #top .false #connector,
+#contents #top .loopBody #connector,
+#contents #top .loopCompleted #connector
 {
-    border-radius: 0px;
+    border-bottom-left-radius: 0;
+    border-top-left-radius: 0;
+    border-bottom-right-radius: 6px;
+    border-top-right-radius: 6px;
+    margin-right: 2px;
+    width:10px;
+    height:10px;
+}
+
+#contents #top .executed #connector #cap,
+#contents #top .executes #connector #cap,
+#contents #top .true #connector #cap,
+#contents #top .false #connector #cap,
+#contents #top .loopBody #connector #cap,
+#contents #top .loopCompleted #connector #cap
+{
+    border-bottom-left-radius: 0;
+    border-top-left-radius: 0;
+    border-bottom-right-radius: 4px;
+    border-top-right-radius: 4px;
+    width:6px;
+    height:6px;
 }
 
 .Highlight
