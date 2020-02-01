@@ -182,12 +182,7 @@ ParameterNodeView #controls EnumField > VisualElement > VisualElement {
     flex-direction: row;
 }
 
-#contents #top .executed #connector,
-#contents #top .executes #connector,
-#contents #top .true #connector,
-#contents #top .false #connector,
-#contents #top .loopBody #connector,
-#contents #top .loopCompleted #connector
+#contents #top .Port_ConditionalLink #connector
 {
     border-bottom-left-radius: 0;
     border-top-left-radius: 0;
@@ -196,14 +191,10 @@ ParameterNodeView #controls EnumField > VisualElement > VisualElement {
     margin-right: 2px;
     width:10px;
     height:10px;
+    background-color: #da4800;
 }
 
-#contents #top .executed #connector #cap,
-#contents #top .executes #connector #cap,
-#contents #top .true #connector #cap,
-#contents #top .false #connector #cap,
-#contents #top .loopBody #connector #cap,
-#contents #top .loopCompleted #connector #cap
+#contents #top .Port_ConditionalLink #connector #cap
 {
     border-bottom-left-radius: 0;
     border-top-left-radius: 0;
@@ -216,4 +207,17 @@ ParameterNodeView #controls EnumField > VisualElement > VisualElement {
 .Highlight
 {
     background-color: rgba(0, 63, 63, 0.8);
+}
+
+.input.Port_ConditionalLink {
+    position: absolute;
+    margin-top: -26px;
+}
+
+.input.Port_ConditionalLink > Label {
+    visibility: hidden;
+}
+
+.conditional-node > #node-border > #title > Label {
+    padding-left: 18px;
 }
