@@ -297,6 +297,45 @@ namespace GraphProcessor
 				SaveGraphToDisk();
 				e.StopPropagation();
 			}
+			else if(e.keyCode == KeyCode.Backspace || e.keyCode == KeyCode.Delete)
+			{
+				var baseNodeViewList = new List<BaseNodeView>();
+				var nodeCount = 0;
+				
+				foreach(var selectable in selection)
+				{
+					if(selectable is BaseNodeView selectedNodeView)
+					{
+						baseNodeViewList.Add(selectedNodeView);
+						nodeCount++;
+					}
+				}
+
+				for(var i = 0; i < nodeCount; i++)
+				{
+					graph.RemoveNode(baseNodeViewList[i].nodeTarget);
+					var iPortsCount = baseNodeViewList[i].inputPortViews.Count;
+					var oPortsCount = baseNodeViewList[i].outputPortViews.Count;
+					
+					for(var j = 0; j < iPortsCount; j++)
+					{
+						var edgesCopy = baseNodeViewList[i].inputPortViews[j].GetEdges().ToList();
+						foreach (var edge in edgesCopy)
+							Disconnect(edge);
+					}
+					
+					for(var j = 0; j < oPortsCount; j++)
+					{
+						var edgesCopy = baseNodeViewList[i].outputPortViews[j].GetEdges().ToList();
+						foreach (var edge in edgesCopy)
+							Disconnect(edge);
+					}
+					
+					RemoveNodeView(baseNodeViewList[i]);
+				}
+				
+				if(nodeCount>0) e.StopPropagation();
+			}
 			else if(nodeViews.Count > 0 && e.commandKey && e.altKey)
 			{
 				//	Node Aligning shortcuts
