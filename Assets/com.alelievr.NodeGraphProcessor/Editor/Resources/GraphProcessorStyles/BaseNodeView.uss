@@ -250,3 +250,57 @@ StartNodeView #output > .output {
 StartNodeView #output > .output > Label {
     visibility: hidden;
 }
+
+#input-container {
+    position: absolute;
+    right: 100%;
+    top: 37px;
+    align-items: flex-end;
+    --layer : -50;
+}
+
+#input-container > .port-input-element > IntegerField,
+#input-container > .port-input-element > FloatField
+{
+    min-width: 40px;
+}
+
+#input-container > .port-input-element > ColorField,
+#input-container > .port-input-element > ObjectField,
+#input-container > .port-input-element > CurveField
+{
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+#input-container > .port-input-element > TextField,
+#input-container > .port-input-element > CurveField
+{
+    width: 95px;
+}
+
+#input-container > .port-input-element > * {
+    margin-left: 2px;
+}
+
+#input-container > .port-input-element * {
+    font-size: 9px;
+}
+
+#input-container > .port-input-element {
+    max-width: 101px;
+    background-color: rgba(72,72,72,0.6);
+    margin-top: 2px;
+    margin-bottom: 2px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+    height: 18px;
+    overflow: hidden;
+    padding-right: 1px;
+}
+
+#input-container > .port-input-element.empty {
+    width: 0;
+}

@@ -65,6 +65,8 @@ namespace GraphProcessor
 		private float selectedNodesShortestWidth;
 		private float selectedNodesLongestHeight;
 		private float selectedNodesShortestHeight;
+
+		private VisualElement inputContainerElement;
 		
 
 			#region  Initialization
@@ -518,44 +520,78 @@ namespace GraphProcessor
 			DrawDefaultInspector();
 		}
 
+		protected void AddInputContainer()
+		{
+			inputContainerElement = new VisualElement {name = "input-container"};
+			mainContainer.parent.Add(inputContainerElement);
+			inputContainerElement.SendToBack();
+			inputContainerElement.pickingMode = PickingMode.Ignore;
+		}
+
 		protected virtual void DrawDefaultInspector()
 		{
+			AddInputContainer();
 			var fields = nodeTarget.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 
 			foreach (var field in fields)
 			{
+				var isSerializedInput = false;
+				var isEmpty = false;
+				
 				//skip if the field is not serializable
-				if (!field.IsPublic && field.GetCustomAttribute(typeof(SerializeField)) == null)
-					continue ;
+				if(!field.IsPublic && field.GetCustomAttribute(typeof(SerializeField)) == null)
+					isEmpty = true;
 
 				//skip if the field is an input/output and not marked as SerializedField
 				if (field.GetCustomAttribute(typeof(SerializeField)) == null && (field.GetCustomAttribute(typeof(InputAttribute)) != null || field.GetCustomAttribute(typeof(OutputAttribute)) != null))
-					continue ;
+					isEmpty = true;
 
                 //skip if marked with NonSerialized or HideInInspector
                 if (field.GetCustomAttribute(typeof(System.NonSerializedAttribute)) != null || field.GetCustomAttribute(typeof(HideInInspector)) != null)
-                    continue ;
+					isEmpty = true;
 
-				var fieldName = Regex.Replace( 
-					Regex.Replace( 
-						field.Name, 
-						@"(\P{Ll})(\P{Ll}\p{Ll})", 
-						"$1 $2" 
-					), 
-					@"(\p{Ll})(\P{Ll})", 
-					"$1 $2" 
-				);
+				if(isEmpty)
+				{
+					if(field.GetCustomAttribute(typeof(InputAttribute)) != null)
+					{
+						var box = new VisualElement {name = field.Name};
+						box.AddToClassList("port-input-element");
+						box.AddToClassList("empty");
+						inputContainerElement.Add(box);
+					}
+					continue;
+				}
 
-				fieldName = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(fieldName);
+				var fieldName = GetFormattedFieldName(field.Name);
 				
-				AddControlField(field, fieldName);
+				if(field.GetCustomAttribute(typeof(InputAttribute)) != null && field.GetCustomAttribute(typeof(SerializeField)) != null)
+				{
+					isSerializedInput = true;
+				}
+				
+				AddControlField(field, fieldName, isSerializedInput);
 			}
 		}
 
-		protected void AddControlField(string fieldName, string label = null)
-			=> AddControlField(nodeTarget.GetType().GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance), label);
+		protected string GetFormattedFieldName(string fieldName)
+		{
+			var returnedName = Regex.Replace( 
+				Regex.Replace( 
+					fieldName, 
+					@"(\P{Ll})(\P{Ll}\p{Ll})", 
+					"$1 $2" 
+				), 
+				@"(\p{Ll})(\P{Ll})", 
+				"$1 $2" 
+			);
 
-		protected void AddControlField(FieldInfo field, string label = null)
+			return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(returnedName);
+		}
+
+		protected void AddControlField(string fieldName, string label = null, bool isSerializedInput = false)
+			=> AddControlField(nodeTarget.GetType().GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance), label, isSerializedInput);
+
+		protected void AddControlField(FieldInfo field, string label = null, bool isSerializedInput = false)
 		{
 			if (field == null)
 				return;
@@ -563,22 +599,38 @@ namespace GraphProcessor
 			var element = FieldFactory.CreateField(field.FieldType, field.GetValue(nodeTarget), (newValue) => {
 				owner.RegisterCompleteObjectUndo("Updated " + newValue);
 				field.SetValue(nodeTarget, newValue);
-			}, label);
+			}, isSerializedInput ? "" : label);
 
 			if(element != null)
 			{
-				controlsContainer.AddToClassList("has-control");
-				controlsContainer.Add(element);
+				if(isSerializedInput)
+				{
+					var box = new VisualElement {name = field.Name};
+					box.AddToClassList("port-input-element");
+					box.Add(element);
+					inputContainerElement.Add(box);
+				}
+				else
+				{
+					controlsContainer.AddToClassList("has-control");
+					controlsContainer.Add(element);
+				}
 			}
 		}
 
 		internal void OnPortConnected(PortView port)
 		{
+			if(port.direction == Direction.Input && inputContainerElement?.Q(port.fieldName) != null)
+				inputContainerElement.Q(port.fieldName).AddToClassList("empty");
+
 			onPortConnected?.Invoke(port);
 		}
 
 		internal void OnPortDisconnected(PortView port)
 		{
+			if(port.direction == Direction.Input && inputContainerElement?.Q(port.fieldName) != null)
+				inputContainerElement.Q(port.fieldName).RemoveFromClassList("empty");
+
 			onPortDisconnected?.Invoke(port);
 		}
 
