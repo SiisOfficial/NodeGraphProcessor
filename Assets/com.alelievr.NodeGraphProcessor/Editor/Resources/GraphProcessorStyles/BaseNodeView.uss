@@ -221,3 +221,32 @@ ParameterNodeView #controls EnumField > VisualElement > VisualElement {
 .conditional-node > #node-border > #title > Label {
     padding-left: 18px;
 }
+
+.conditional-node > #node-border,
+.conditional-node > #selection-border {
+    border-color: aliceblue;
+}
+
+StartNodeView #divider.horizontal {
+    border-bottom-width: 0;
+}
+
+StartNodeView.conditional-node > #node-border > #title > Label {
+    padding-left: 4px;
+    font-size: 16px;
+    margin-top: 5px;
+}
+
+StartNodeView > #node-border > #contents > #top {
+    max-height: 0;
+}
+
+StartNodeView #output > .output {
+    position: absolute;
+    margin-top: -25px;
+    right:0;
+}
+
+StartNodeView #output > .output > Label {
+    visibility: hidden;
+}
