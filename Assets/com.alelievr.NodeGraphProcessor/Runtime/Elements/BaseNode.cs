@@ -13,6 +13,8 @@ namespace GraphProcessor
 	[Serializable]
 	public abstract class BaseNode
 	{
+		public virtual string       category => null;
+		
 		public virtual string       name => GetType().Name;
 
         public virtual string       layoutStyle => string.Empty;

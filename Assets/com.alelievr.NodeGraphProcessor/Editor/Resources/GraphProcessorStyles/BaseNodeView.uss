@@ -182,7 +182,8 @@ ParameterNodeView #controls EnumField > VisualElement > VisualElement {
     flex-direction: row;
 }
 
-#contents #top .Port_ConditionalLink #connector
+#contents #top .Port_ConditionalLink #connector,
+#title .Port_ConditionalLink #connector
 {
     border-bottom-left-radius: 0;
     border-top-left-radius: 0;
@@ -194,7 +195,8 @@ ParameterNodeView #controls EnumField > VisualElement > VisualElement {
     background-color: #da4800;
 }
 
-#contents #top .Port_ConditionalLink #connector #cap
+#contents #top .Port_ConditionalLink #connector #cap,
+#title .Port_ConditionalLink #connector #cap
 {
     border-bottom-left-radius: 0;
     border-top-left-radius: 0;
@@ -209,17 +211,25 @@ ParameterNodeView #controls EnumField > VisualElement > VisualElement {
     background-color: rgba(0, 63, 63, 0.8);
 }
 
-.input.Port_ConditionalLink {
-    position: absolute;
-    margin-top: -26px;
+.executes.Port_ConditionalLink,
+.executed.Port_ConditionalLink {
+    margin-top: 2px;
+    padding-left: 0;
 }
 
-.input.Port_ConditionalLink > Label {
+.executes-next #title-button-container > #collapse-button {
+    width: 20px;
+    margin-right: 4px;
+}
+
+.input.Port_ConditionalLink > Label,
+.executes-next .output.Port_ConditionalLink > Label {
     visibility: hidden;
+    display: none;
 }
 
-.conditional-node > #node-border > #title > Label {
-    padding-left: 18px;
+.conditional-node #title > Label {
+    margin-left:0;
 }
 
 .conditional-node > #node-border,
@@ -259,6 +269,28 @@ StartNodeView #output > .output > Label {
     --layer : -50;
 }
 
+.collapsed #input-container {
+    visibility: hidden;
+}
+
+#input-container {
+    opacity: 0.6;
+}
+
+.node:checked > #input-container {
+    opacity: 1;
+}
+
+#input-container > .port-input-element IntegerInput,
+#input-container > .port-input-element FloatInput,
+#input-container > .port-input-element TextInput
+{
+    border-top-left-radius: 1px;
+    border-bottom-left-radius: 1px;
+    border-top-right-radius: 1px;
+    border-bottom-right-radius: 1px;
+}
+
 #input-container > .port-input-element > IntegerField,
 #input-container > .port-input-element > FloatField
 {
@@ -276,7 +308,16 @@ StartNodeView #output > .output > Label {
 #input-container > .port-input-element > TextField,
 #input-container > .port-input-element > CurveField
 {
-    width: 95px;
+    min-width: 40px;
+    max-width: 145px;
+}
+
+#input-container > .port-input-element > Vector3Field Label {
+    font-size: 8px;
+    min-width: 8px;
+    flex-basis: 8px;
+    padding-top: 2px;
+    margin-right: 1px;
 }
 
 #input-container > .port-input-element > * {
@@ -284,23 +325,37 @@ StartNodeView #output > .output > Label {
 }
 
 #input-container > .port-input-element * {
-    font-size: 9px;
+    font-size: 8px;
 }
 
 #input-container > .port-input-element {
-    max-width: 101px;
+    max-width: 151px;
     background-color: rgba(72,72,72,0.6);
-    margin-top: 2px;
+    margin-top: 3px;
     margin-bottom: 2px;
     padding-top: 1px;
     padding-bottom: 1px;
     border-top-left-radius: 4px;
     border-bottom-left-radius: 4px;
-    height: 18px;
+    height: 17px;
     overflow: hidden;
     padding-right: 1px;
 }
 
 #input-container > .port-input-element.empty {
     width: 0;
+}
+
+#category {
+    position: absolute;
+    margin-top: -8px;
+    font-size: 8px;
+    margin-left: 9px;
+    color: #c0c0c0;
+}
+
+.node:checked > #category {
+    margin-top: -9px;
+    font-size: 9px;
+    color: #ffffff;
 }

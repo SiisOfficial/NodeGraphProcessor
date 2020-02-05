@@ -127,9 +127,36 @@ namespace GraphProcessor
 
 			title = (string.IsNullOrEmpty(nodeTarget.name)) ? nodeTarget.GetType().Name : nodeTarget.name;
 
+			if(!string.IsNullOrEmpty(nodeTarget.category))
+			{
+				var categoryLabel = new Label(nodeTarget.category) {name = "category"};
+				mainContainer.parent.Add(categoryLabel);
+				categoryLabel.SendToBack();
+				categoryLabel.pickingMode = PickingMode.Ignore;
+			}
+
             initializing = true;
 
             SetPosition(nodeTarget.position);
+			
+			if(nodeTarget is IConditionalNode)
+			{
+				mainContainer.parent.AddToClassList("conditional-node");
+				
+				var previousLink = contentContainer.Q(className: "executed");
+				if(previousLink != null)
+				{
+					titleContainer.Add(previousLink);
+					previousLink.SendToBack();
+				}
+
+				if(nodeTarget is LinearConditionalNode)
+				{
+					mainContainer.parent.AddToClassList("executes-next");
+					var nextLink = contentContainer.Q(className: "executes");
+					titleContainer.Add(nextLink);
+				}
+			}
 		}
 
 		void InitializeSettings()

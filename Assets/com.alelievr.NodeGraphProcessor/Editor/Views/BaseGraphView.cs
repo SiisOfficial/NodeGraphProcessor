@@ -65,7 +65,7 @@ namespace GraphProcessor
 
 			InitializeManipulators();
 
-			SetupZoom(0.33f, 1.67f);
+			SetupZoom(0.33f, 1.75f);
 
 			Undo.undoRedoPerformed += ReloadView;
 
