@@ -223,7 +223,7 @@ ParameterNodeView #controls EnumField > VisualElement > VisualElement {
 }
 
 .input.Port_ConditionalLink > Label,
-.executes-next .output.Port_ConditionalLink > Label {
+.executes-next #title .output.Port_ConditionalLink > Label {
     visibility: hidden;
     display: none;
 }
@@ -269,6 +269,10 @@ StartNodeView #output > .output > Label {
     --layer : -50;
 }
 
+.conditional-node #title > Label {
+    flex-grow: 1;
+}
+
 .collapsed #input-container {
     visibility: hidden;
 }
@@ -294,7 +298,7 @@ StartNodeView #output > .output > Label {
 #input-container > .port-input-element > IntegerField,
 #input-container > .port-input-element > FloatField
 {
-    min-width: 40px;
+    min-width: 25px;
 }
 
 #input-container > .port-input-element > ColorField,
@@ -305,10 +309,15 @@ StartNodeView #output > .output > Label {
     margin-bottom: 0;
 }
 
-#input-container > .port-input-element > TextField,
-#input-container > .port-input-element > CurveField
+#input-container > .port-input-element > TextField
 {
     min-width: 40px;
+    max-width: 145px;
+}
+
+#input-container > .port-input-element > CurveField
+{
+    min-width: 90px;
     max-width: 145px;
 }
 

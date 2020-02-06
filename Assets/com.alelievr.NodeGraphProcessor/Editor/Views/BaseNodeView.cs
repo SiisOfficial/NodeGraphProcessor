@@ -69,7 +69,7 @@ namespace GraphProcessor
 		private VisualElement inputContainerElement;
 		
 
-			#region  Initialization
+		#region  Initialization
 
 		public void Initialize(BaseGraphView owner, BaseNode node)
 		{
@@ -559,7 +559,7 @@ namespace GraphProcessor
 		{
 			AddInputContainer();
 			var fields = nodeTarget.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-
+			
 			foreach (var field in fields)
 			{
 				var isSerializedInput = false;

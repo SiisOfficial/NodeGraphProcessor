@@ -1,10 +1,7 @@
 using GraphProcessor;
 
-[NodeCustomEditor(typeof(IfNode))]
+[NodeCustomEditor(typeof(ConditionalNode))]
 public class ConditionalNodeView : BaseNodeView
 {
-	public override void Enable()
-	{
-		
-	}
+
 }

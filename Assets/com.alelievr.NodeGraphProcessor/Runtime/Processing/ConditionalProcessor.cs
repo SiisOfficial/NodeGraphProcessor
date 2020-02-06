@@ -122,6 +122,23 @@ public class ConditionalProcessor : BaseGraphProcessor
                                 }
                                 skipConditionalHandling.Add(node);
                                 break;
+                            // another special case for waitable nodes, like "wait for a coroutine", wait x seconds", etc.
+                            case WaitableConditionalNode wNode:
+                                foreach (var n in wNode.GetExecutedNodes())
+                                    nodeToExecute.Push(n);
+                                
+//                                while(!wNode.isFinished)
+//                                {
+                                //    Yemiyor.
+//                                    yield return null;
+//                                }
+
+                                wNode.onProcessFinished += (wnode) =>
+                                {
+                                    foreach(var n in wnode.GetExecuteAfterNodes())
+                                        nodeToExecute.Push(n);
+                                };
+                                break;
                             case IConditionalNode cNode:
                                 foreach (var n in cNode.GetExecutedNodes())
                                     nodeToExecute.Push(n);

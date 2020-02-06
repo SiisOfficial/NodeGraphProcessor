@@ -1,0 +1,36 @@
+using GraphProcessor;
+using UnityEngine;
+using System.Collections;
+
+namespace #NAMESPACE#
+{
+    [System.Serializable, NodeMenuItem("Custom/#NAME#")]
+    public class #SCRIPTNAME# : WaitableConditionalNode
+    {
+        //public override string	category => "Category Name";
+        
+        public override string		name => "#NAME#";
+    
+        [SerializeField, Input(name = "Wait Time")]
+        public float waitTime;
+    
+        protected override void Process()
+        {
+            var enumerator = AsyncProcess();
+            
+            while (enumerator.MoveNext()) {}
+        }
+        
+        protected override IEnumerator AsyncProcess() {
+            float passed = 0f;
+            
+            while(passed < waitTime) {
+                passed += Time.deltaTime;
+                
+                yield return null; 
+            }
+            
+            isFinished = true;
+        }
+    }
+}

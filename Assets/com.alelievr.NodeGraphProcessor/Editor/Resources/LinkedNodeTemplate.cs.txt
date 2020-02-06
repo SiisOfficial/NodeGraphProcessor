@@ -3,10 +3,10 @@ using GraphProcessor;
 namespace #NAMESPACE#
 {
     [System.Serializable, NodeMenuItem("Custom/#NAME#")]
-    public class #SCRIPTNAME# : BaseNode
+    public class #SCRIPTNAME# : LinearConditionalNode
     {
         //public override string	category => "Category Name";
-        
+    
         public override string		name => "#NAME#";
         
         [Input(name = "In")]

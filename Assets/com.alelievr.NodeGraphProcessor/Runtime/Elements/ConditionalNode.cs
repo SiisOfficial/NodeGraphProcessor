@@ -22,8 +22,15 @@ public abstract class ConditionalNode : BaseNode, IConditionalNode
 	public override FieldInfo[] GetNodeFields()
 	{
 		var fields = base.GetNodeFields();
-		Array.Sort(fields, (f1, f2) => f1.Name == nameof(executed) ? -1 : 1);
+		var executedIdx = Array.FindIndex(fields, info => info.Name == nameof(executed));
+		var _fields = fields.ToList();
+		_fields.RemoveAt(executedIdx);
+		_fields.Insert(0, fields[executedIdx]);
+		//	Sort is just changes all the ports, so we need to move "executed" port manually
+		//Array.Sort(fields, (f1, f2) => f1.Name == nameof(executed) ? -1 : 1);
+		fields = _fields.ToArray();
 		return fields;
+		
 	}
 }
 
@@ -40,6 +47,33 @@ public abstract class LinearConditionalNode : ConditionalNode, IConditionalNode
 	{
 		// Return all the nodes connected to the executes port
 		return outputPorts.FirstOrDefault(n => n.fieldName == nameof(executes))
+			.GetEdges().Select(e => e.inputNode as ConditionalNode);
+	}
+}
+
+[System.Serializable]
+/// <summary>
+/// This class represent a simple node which takes one event in parameter and pass it to the next node
+/// </summary>
+public abstract class WaitableConditionalNode : LinearConditionalNode
+{
+	[NonSerialized]
+	public bool isFinished = false;
+	
+	[Output(name = "Execute After")]
+	public ConditionalLink	executeAfter;
+
+	protected virtual IEnumerator AsyncProcess()
+	{
+		return null;
+	}
+
+	public Action<WaitableConditionalNode> onProcessFinished;
+
+	public IEnumerable< ConditionalNode >	GetExecuteAfterNodes()
+	{
+		// Return all the nodes connected to the executes port
+		return outputPorts.FirstOrDefault(n => n.fieldName == nameof(executeAfter))
 			.GetEdges().Select(e => e.inputNode as ConditionalNode);
 	}
 }

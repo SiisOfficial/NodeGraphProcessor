@@ -16,6 +16,9 @@ namespace GraphProcessor
 	{
 		static readonly string		nodeBaseName = "Node.cs";
 		static readonly string		nodeViewBaseName = "NodeView.cs";
+		static readonly string linkedNodeBaseName = "LinkedNode.cs";
+		static readonly string waitableNodeBaseName = "WaitableNode.cs";
+		
         static string      _nodeTemplatePath = null;
         static string      nodeTemplatePath
 		{
@@ -29,6 +32,7 @@ namespace GraphProcessor
 				return _nodeTemplatePath;
 			}
 		}
+		
         static string      _nodeViewTemplatePath;
         static string      nodeViewTemplatePath
 		{
@@ -40,6 +44,34 @@ namespace GraphProcessor
 					_nodeViewTemplatePath = AssetDatabase.GetAssetPath(template);
 				}
 				return _nodeViewTemplatePath;
+			}
+		}
+		
+		static string _linkedNodeTemplatePath;
+		static string linkedNodeTemplatePath
+		{
+			get
+			{
+				if (_linkedNodeTemplatePath == null)
+				{
+					var template = Resources.Load<TextAsset>("LinkedNodeTemplate.cs");
+					_linkedNodeTemplatePath = AssetDatabase.GetAssetPath(template);
+				}
+				return _linkedNodeTemplatePath;
+			}
+		}
+		
+		static string _waitableNodeTemplatePath;
+		static string waitableNodeTemplatePath
+		{
+			get
+			{
+				if (_waitableNodeTemplatePath == null)
+				{
+					var template = Resources.Load<TextAsset>("WaitableNodeTemplate.cs");
+					_waitableNodeTemplatePath = AssetDatabase.GetAssetPath(template);
+				}
+				return _waitableNodeTemplatePath;
 			}
 		}
 
@@ -69,14 +101,24 @@ namespace GraphProcessor
 			return null;
         }
 
-		protected static void CreateDefaultNodeCSharpScritpt()
+		protected static void CreateDefaultNodeCSharpScript()
 		{
 			ProjectWindowUtil.CreateScriptAssetFromTemplateFile(nodeTemplatePath, nodeBaseName);
 		}
 
-		protected static void CreateDefaultNodeViewCSharpScritpt()
+		protected static void CreateDefaultNodeViewCSharpScript()
 		{
 			ProjectWindowUtil.CreateScriptAssetFromTemplateFile(nodeViewTemplatePath, nodeViewBaseName);
+		}
+
+		protected static void CreateDefaultLinkedNodeCSharpScript()
+		{
+			ProjectWindowUtil.CreateScriptAssetFromTemplateFile(linkedNodeTemplatePath, linkedNodeBaseName);
+		}
+
+		protected static void CreateDefaultWaitableNodeCSharpScript()
+		{
+			ProjectWindowUtil.CreateScriptAssetFromTemplateFile(waitableNodeTemplatePath, waitableNodeBaseName);
 		}
 	}
 }
