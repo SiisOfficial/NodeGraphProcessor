@@ -28,6 +28,18 @@ namespace GraphProcessor
 				text = e.newValue;
 				graphView.graph.UpdateExposedParameterName(param, e.newValue);
 			});
+
+			var parameterElem = this.Q("pill");
+			
+			parameterElem.RegisterCallback<MouseOverEvent>((e)=>
+			{
+				graphView.Q<ParameterNodeView>(className: "pName-" + parameter.name)?.AddToClassList("Highlight");
+			});
+			
+			parameterElem.RegisterCallback<MouseOutEvent>((e)=>
+			{
+				graphView.Q<ParameterNodeView>(className: "pName-" + parameter.name)?.RemoveFromClassList("Highlight");
+			});
         }
 
 		void BuildContextualMenu(ContextualMenuPopulateEvent evt)
