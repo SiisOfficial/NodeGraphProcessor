@@ -328,6 +328,9 @@ StartNodeView #output > .output > Label {
     padding-top: 2px;
     margin-right: 1px;
 }
+#input-container > .port-input-element > Vector3Field FloatInput {
+    min-width: 25px;
+}
 
 #input-container > .port-input-element > * {
     margin-left: 2px;

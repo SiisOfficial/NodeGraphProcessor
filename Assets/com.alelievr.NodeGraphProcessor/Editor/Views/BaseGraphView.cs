@@ -559,7 +559,7 @@ namespace GraphProcessor
 			return true;
 		}
 
-		protected BaseNodeView AddNodeView(BaseNode node)
+		public BaseNodeView AddNodeView(BaseNode node)
 		{
 			var viewType = NodeProvider.GetNodeViewTypeFromType(node.GetType());
 
@@ -576,7 +576,7 @@ namespace GraphProcessor
 			return baseNodeView;
 		}
 
-		protected void RemoveNodeView(BaseNodeView nodeView)
+		public void RemoveNodeView(BaseNodeView nodeView)
 		{
 			RemoveElement(nodeView);
 			nodeViews.Remove(nodeView);

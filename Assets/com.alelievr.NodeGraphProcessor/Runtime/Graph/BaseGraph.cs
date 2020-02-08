@@ -84,6 +84,7 @@ namespace GraphProcessor
 		public Vector3					scale = Vector3.one;
 
 		public event Action				onExposedParameterListChanged;
+		public event Action< string >   onExposedParameterRemoved;
 		public event Action< string >	onExposedParameterModified;
 		public event Action				onEnabled;
 
@@ -117,6 +118,8 @@ namespace GraphProcessor
 
 		public void RemoveNode(BaseNode node)
 		{
+			nodesPerGUID.Remove(node.GUID);
+			
 			nodes.Remove(node);
 
 			onGraphChanges?.Invoke(new GraphChanges{ removedNode = node });
@@ -318,11 +321,12 @@ namespace GraphProcessor
 			exposedParameters.Remove(ep);
 
 			onExposedParameterListChanged?.Invoke();
+			onExposedParameterRemoved?.Invoke(ep.name);
 		}
 
 		public void RemoveExposedParameter(string guid)
 		{
-			if (exposedParameters.RemoveAll(e => e.guid == guid) != 0)
+			if(exposedParameters.RemoveAll(e => e.guid == guid) != 0)
 				onExposedParameterListChanged?.Invoke();
 		}
 

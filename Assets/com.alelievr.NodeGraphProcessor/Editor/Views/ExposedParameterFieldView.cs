@@ -33,12 +33,12 @@ namespace GraphProcessor
 			
 			parameterElem.RegisterCallback<MouseOverEvent>((e)=>
 			{
-				graphView.Q<ParameterNodeView>(className: "pName-" + parameter.name)?.AddToClassList("Highlight");
+				graphView.Query<ParameterNodeView>(className: "pName-" + parameter.name).Build().ForEach(view => view.AddToClassList("Highlight"));
 			});
 			
 			parameterElem.RegisterCallback<MouseOutEvent>((e)=>
 			{
-				graphView.Q<ParameterNodeView>(className: "pName-" + parameter.name)?.RemoveFromClassList("Highlight");
+				graphView.Query<ParameterNodeView>(className: "pName-" + parameter.name).Build().ForEach(view => view.RemoveFromClassList("Highlight"));
 			});
         }
 

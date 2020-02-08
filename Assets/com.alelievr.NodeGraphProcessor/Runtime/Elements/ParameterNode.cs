@@ -34,6 +34,7 @@ namespace GraphProcessor
 			LoadExposedParameter();
 
 			graph.onExposedParameterModified += OnParamChanged;
+			graph.onExposedParameterRemoved += OnParamRemoved;
 			if (onParameterChanged != null)
 				onParameterChanged?.Invoke();
 		}
@@ -59,6 +60,14 @@ namespace GraphProcessor
 			if (parameter?.name == modifiedParameterName)
 			{
 				onParameterChanged?.Invoke();
+			}
+		}
+
+		void OnParamRemoved(string removedParameterName)
+		{
+			if (parameter?.name == removedParameterName)
+			{
+				graph.RemoveNode(this);
 			}
 		}
 
