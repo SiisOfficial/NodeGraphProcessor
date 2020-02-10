@@ -97,4 +97,15 @@ namespace GraphProcessor
 			this.fieldName = fieldName;
 		}
 	}
+	
+	[AttributeUsage(AttributeTargets.Field)]
+	public class SettingAttribute : Attribute
+	{
+		public string name;
+
+		public SettingAttribute(string name = null)
+		{
+			this.name          = name;
+		}
+	}
 }

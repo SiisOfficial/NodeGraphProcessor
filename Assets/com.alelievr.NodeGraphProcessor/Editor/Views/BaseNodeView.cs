@@ -170,6 +170,13 @@ namespace GraphProcessor
 				settingsContainer.visible = false;
 				settingsContainer.Add(settings);
 				Add(settingsContainer);
+				var fields = nodeTarget.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+
+				foreach(var field in fields)
+					if(field.GetCustomAttribute(typeof(SettingAttribute)) != null) 
+						AddSettingField(field);
+
+				PrepareSettingsView();
 			}
 		}
 
@@ -199,6 +206,10 @@ namespace GraphProcessor
 			buttonContainer.style.flexDirection = FlexDirection.Row;
 			buttonContainer.Add(settingButton);
 			titleContainer.Add(buttonContainer);
+			
+			// Check and reorder if has a output port in the title
+			var outPutPort = titleContainer.Q<PortView>(className: "output");
+			if(outPutPort != null) buttonContainer.PlaceBehind(outPutPort);
 		}
 
 		void ToggleSettings()
@@ -559,22 +570,23 @@ namespace GraphProcessor
 		{
 			AddInputContainer();
 			var fields = nodeTarget.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-			
-			foreach (var field in fields)
+
+			foreach(var field in fields)
 			{
 				var isSerializedInput = false;
-				var isEmpty = false;
-				
-				//skip if the field is not serializable
-				if(!field.IsPublic && field.GetCustomAttribute(typeof(SerializeField)) == null)
+				var isEmpty           = false;
+
+				//skip if the field is not serializable or is a node setting
+				if(!field.IsPublic && field.GetCustomAttribute(typeof(SerializeField)) == null || field.GetCustomAttribute(typeof(SettingAttribute)) != null)
 					isEmpty = true;
 
 				//skip if the field is an input/output and not marked as SerializedField
-				if (field.GetCustomAttribute(typeof(SerializeField)) == null && (field.GetCustomAttribute(typeof(InputAttribute)) != null || field.GetCustomAttribute(typeof(OutputAttribute)) != null))
+				if(field.GetCustomAttribute(typeof(SerializeField)) == null &&
+				   (field.GetCustomAttribute(typeof(InputAttribute)) != null || field.GetCustomAttribute(typeof(OutputAttribute)) != null))
 					isEmpty = true;
 
-                //skip if marked with NonSerialized or HideInInspector
-                if (field.GetCustomAttribute(typeof(System.NonSerializedAttribute)) != null || field.GetCustomAttribute(typeof(HideInInspector)) != null)
+				//skip if marked with NonSerialized or HideInInspector
+				if(field.GetCustomAttribute(typeof(System.NonSerializedAttribute)) != null || field.GetCustomAttribute(typeof(HideInInspector)) != null)
 					isEmpty = true;
 
 				if(isEmpty)
@@ -590,12 +602,12 @@ namespace GraphProcessor
 				}
 
 				var fieldName = GetFormattedFieldName(field.Name);
-				
+
 				if(field.GetCustomAttribute(typeof(InputAttribute)) != null && field.GetCustomAttribute(typeof(SerializeField)) != null)
 				{
 					isSerializedInput = true;
 				}
-				
+
 				AddControlField(field, fieldName, isSerializedInput);
 			}
 		}
@@ -642,6 +654,24 @@ namespace GraphProcessor
 					controlsContainer.AddToClassList("has-control");
 					controlsContainer.Add(element);
 				}
+			}
+		}
+		protected void AddSettingField(FieldInfo field)
+		{
+			if (field == null)
+				return;
+
+			var label = field.GetCustomAttribute<SettingAttribute>().name;
+	
+			var element = FieldFactory.CreateField(field.FieldType, field.GetValue(nodeTarget), (newValue) => {
+				owner.RegisterCompleteObjectUndo("Updated " + newValue);
+				field.SetValue(nodeTarget, newValue);
+			}, label);
+
+			if(element != null)
+			{
+				settingsContainer.Add(element);
+				element.name = field.Name;
 			}
 		}
 
@@ -876,8 +906,9 @@ namespace GraphProcessor
 			RefreshPorts();
 		}
 		
-		protected virtual VisualElement CreateSettingsView() => new Label("Settings");
+		protected virtual VisualElement CreateSettingsView() => new Label("Settings") {name = "header"};
+		protected virtual VisualElement PrepareSettingsView() => null;
 
 		#endregion
-    }
+	}
 }

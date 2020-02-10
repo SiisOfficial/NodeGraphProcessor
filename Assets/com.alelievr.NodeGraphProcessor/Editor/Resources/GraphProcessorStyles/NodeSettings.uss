@@ -1,6 +1,7 @@
 NodeSettingsView {
-    width: 300px;
     position: absolute;
+    min-width: 150px;
+    max-width: 250px;
     -unity-slice-top: 40;
     -unity-slice-left: 80;
     -unity-slice-right: 25;
@@ -12,9 +13,26 @@ NodeSettingsView {
     background-image: resource("Settings_Flyout_9slice");
 }
 
+NodeSettingsView Label#header {
+    padding-bottom: 4px;
+    -unity-font-style: bold;
+}
+
+NodeSettingsView Label.unity-text-element {
+    min-width: 100px;
+    font-size: 10px;
+}
+
 NodeSettingsView > #mainContainer {
     padding-top: 4px;
     padding-left: 4px;
     padding-right: 4px;
+    padding-bottom: 4px;
+}
+
+NodeSettingsView > #mainContainer > #contentContainer {
+    padding-top: 4px;
+    padding-left: 8px;
+    padding-right: 8px;
     padding-bottom: 4px;
 }

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace GraphProcessor
 {
-	class NodeSettingsView : VisualElement
+	public class NodeSettingsView : VisualElement
     {
         VisualElement m_ContentContainer;
 
