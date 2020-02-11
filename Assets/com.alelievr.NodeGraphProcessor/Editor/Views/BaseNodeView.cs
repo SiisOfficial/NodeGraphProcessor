@@ -39,9 +39,9 @@ namespace GraphProcessor
 		public event Action< PortView >			onPortConnected;
 		public event Action< PortView >			onPortDisconnected;
 
-		protected virtual bool					hasSettings => false;
+		protected virtual bool					hasSettings { get; set; }
 
-        public bool								initializing = false; //Used for applying SetPosition on locked node at init.
+		public bool								initializing = false; //Used for applying SetPosition on locked node at init.
 
         readonly string							baseNodeStyle = "GraphProcessorStyles/BaseNodeView";
 
@@ -576,17 +576,24 @@ namespace GraphProcessor
 				var isSerializedInput = false;
 				var isEmpty           = false;
 
-				//skip if the field is not serializable or is a node setting
-				if(!field.IsPublic && field.GetCustomAttribute(typeof(SerializeField)) == null || field.GetCustomAttribute(typeof(SettingAttribute)) != null)
+				//skip if the field is a node setting
+				if(field.GetCustomAttribute(typeof(SettingAttribute)) != null)
+				{
+					isEmpty = true;
+					hasSettings = true;
+				}
+
+				//skip if the field is not serializable
+				else if(!field.IsPublic && field.GetCustomAttribute(typeof(SerializeField)) == null)
 					isEmpty = true;
 
 				//skip if the field is an input/output and not marked as SerializedField
-				if(field.GetCustomAttribute(typeof(SerializeField)) == null &&
+				else if(field.GetCustomAttribute(typeof(SerializeField)) == null &&
 				   (field.GetCustomAttribute(typeof(InputAttribute)) != null || field.GetCustomAttribute(typeof(OutputAttribute)) != null))
 					isEmpty = true;
 
 				//skip if marked with NonSerialized or HideInInspector
-				if(field.GetCustomAttribute(typeof(System.NonSerializedAttribute)) != null || field.GetCustomAttribute(typeof(HideInInspector)) != null)
+				else if(field.GetCustomAttribute(typeof(System.NonSerializedAttribute)) != null || field.GetCustomAttribute(typeof(HideInInspector)) != null)
 					isEmpty = true;
 
 				if(isEmpty)
