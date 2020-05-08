@@ -89,7 +89,7 @@ namespace GraphProcessor
 			InitializeView();
 			InitializeDebug();
 
-			Enable();
+			ExceptionToLog.Call(() => Enable());
 
 			InitializeSettings();
 
@@ -275,7 +275,7 @@ namespace GraphProcessor
 			});
 		}
 
-		public PortView AddPort(FieldInfo fieldInfo, Direction direction, EdgeConnectorListener listener, PortData portData)
+		public PortView AddPort(FieldInfo fieldInfo, Direction direction, BaseEdgeConnectorListener listener, PortData portData)
 		{
 			// TODO: hardcoded value
 			PortView p = new PortView(Orientation.Horizontal, direction, fieldInfo, portData, listener);
@@ -451,22 +451,18 @@ namespace GraphProcessor
 		
 		public void OpenNodeViewScript()
 		{
-			var scriptPath = NodeProvider.GetNodeViewScript(GetType());
+			var script = NodeProvider.GetNodeViewScript(GetType());
 
-#pragma warning disable CS0618 // Deprecated function but no alternative :(
-			if (scriptPath != null)
-				InternalEditorUtility.OpenFileAtLineExternal(scriptPath, 0);
-#pragma warning restore CS0618
+			if (script != null)
+				AssetDatabase.OpenAsset(script.GetInstanceID(), 0, 0);
 		}
 
 		public void OpenNodeScript()
 		{
-			var scriptPath = NodeProvider.GetNodeScript(nodeTarget.GetType());
+			var script = NodeProvider.GetNodeScript(nodeTarget.GetType());
 
-#pragma warning disable CS0618 // Deprecated function but no alternative :(
-			if (scriptPath != null)
-				InternalEditorUtility.OpenFileAtLineExternal(scriptPath, 0);
-#pragma warning restore CS0618
+			if (script != null)
+				AssetDatabase.OpenAsset(script.GetInstanceID(), 0, 0);
 		}
 
 		public void ToggleDebug()
@@ -634,10 +630,10 @@ namespace GraphProcessor
 			return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(returnedName);
 		}
 
-		protected void AddControlField(string fieldName, string label = null, bool isSerializedInput = false)
-			=> AddControlField(nodeTarget.GetType().GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance), label, isSerializedInput);
+		protected void AddControlField(string fieldName, string label = null, bool isSerializedInput = false, Action valueChangedCallback = null)
+			=> AddControlField(nodeTarget.GetType().GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance), label, isSerializedInput, valueChangedCallback);
 
-		protected void AddControlField(FieldInfo field, string label = null, bool isSerializedInput = false)
+		protected void AddControlField(FieldInfo field, string label = null, bool isSerializedInput = false, Action valueChangedCallback = null)
 		{
 			if (field == null)
 				return;
@@ -645,6 +641,8 @@ namespace GraphProcessor
 			var element = FieldFactory.CreateField(field.FieldType, field.GetValue(nodeTarget), (newValue) => {
 				owner.RegisterCompleteObjectUndo("Updated " + newValue);
 				field.SetValue(nodeTarget, newValue);
+				NotifyNodeChanged();
+				valueChangedCallback?.Invoke();
 			}, isSerializedInput ? "" : label);
 
 			if(element != null)
@@ -710,7 +708,7 @@ namespace GraphProcessor
                 initializing = false;
                 base.SetPosition(newPos);
 
-                Undo.RegisterCompleteObjectUndo(owner.graph, "Moved graph node");
+				owner.RegisterCompleteObjectUndo("Moved graph node");
                 nodeTarget.position = newPos;
             }
 		}
@@ -915,6 +913,11 @@ namespace GraphProcessor
 		
 		protected virtual VisualElement CreateSettingsView() => new Label("Settings") {name = "header"};
 		protected virtual VisualElement PrepareSettingsView() => null;
+		
+		/// <summary>
+		/// Send an event to the graph telling that the content of this node have changed
+		/// </summary>
+		public void NotifyNodeChanged() => owner.graph.NotifyNodeChanged(nodeTarget);
 
 		#endregion
 	}

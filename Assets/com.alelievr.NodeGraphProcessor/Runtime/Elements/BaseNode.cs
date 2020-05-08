@@ -90,8 +90,8 @@ namespace GraphProcessor
 			var node = Activator.CreateInstance(nodeType) as BaseNode;
 
 			node.position = new Rect(position, new Vector2(100, 100));
-
-			node.OnNodeCreated();
+			
+			ExceptionToLog.Call(() => node.OnNodeCreated());
 
 			return node;
 		}
@@ -103,7 +103,7 @@ namespace GraphProcessor
 		{
 			this.graph = graph;
 
-			Enable();
+			ExceptionToLog.Call(() => Enable());
 
 			foreach (var nodeFieldKP in nodeFields)
 			{
@@ -176,7 +176,7 @@ namespace GraphProcessor
 					}
 
 					// patch the port datas
-					port.portData = portData;
+					port.portData.CopyFrom(portData);
 				}
 
 				finalPorts.Add(portData.identifier);
@@ -196,10 +196,7 @@ namespace GraphProcessor
 			}
 		}
 
-		~BaseNode()
-		{
-			Disable();
-		}
+		internal void DisableInternal() => ExceptionToLog.Call(() => Disable());
 
 		/// <summary>
 		/// Called only when the node is created, not when instantiated
@@ -273,7 +270,11 @@ namespace GraphProcessor
 			NodePortContainer portCollection = (input) ? (NodePortContainer)inputPorts : outputPorts;
 
 			portCollection.Add(edge);
-
+			
+			// Reset default values of input port:
+			if (edge.inputNode == this)
+				edge.inputPort?.ResetToDefault();
+			
 			UpdatePortsForField((input) ? edge.inputFieldName : edge.outputFieldName);
 			
 			onAfterEdgeConnected?.Invoke(edge);
@@ -298,7 +299,7 @@ namespace GraphProcessor
 		{
 			inputPorts.PullDatas();
 
-			Process();
+			ExceptionToLog.Call(() => Process());
 
 			onProcessed?.Invoke();
 

@@ -21,7 +21,7 @@ namespace GraphProcessor
 
 		public BaseGraph							graph;
 
-		public EdgeConnectorListener				connectorListener;
+		public BaseEdgeConnectorListener connectorListener;
 
 		public List< BaseNodeView >					nodeViews = new List< BaseNodeView >();
 		public Dictionary< BaseNode, BaseNodeView >	nodeViewsPerNode = new Dictionary< BaseNode, BaseNodeView >();
@@ -170,7 +170,7 @@ namespace GraphProcessor
 							Disconnect(edge);
 							return true;
 						case BaseNodeView node:
-							node.OnRemoved();
+							ExceptionToLog.Call(() => node.OnRemoved());
 							graph.RemoveNode(node.nodeTarget);
 							RemoveElement(node);
 							return true;
@@ -226,7 +226,10 @@ namespace GraphProcessor
 
 			compatiblePorts.AddRange(ports.ToList().Where(p => {
 				var portView = p as PortView;
-
+				
+				if (portView.owner == (startPort as PortView).owner)
+					return false;
+				
 				if (p.direction == startPort.direction)
 					return false;
 
@@ -290,7 +293,7 @@ namespace GraphProcessor
 			});
 		}
 
-		void KeyDownCallback(KeyDownEvent e)
+		protected virtual void KeyDownCallback(KeyDownEvent e)
 		{
 			if (e.keyCode == KeyCode.S && e.commandKey)
 			{
@@ -433,6 +436,7 @@ namespace GraphProcessor
 			RemoveNodeViews();
 			RemoveEdges();
 			RemoveGroups();
+			RemoveStackNodeViews();
 			
 			// And re-add with new up to date datas
 			InitializeNodeViews();
@@ -452,11 +456,16 @@ namespace GraphProcessor
 
 			this.graph = graph;
 
-            connectorListener = new EdgeConnectorListener(this);
+			connectorListener = CreateEdgeConnectorListener();
 			
 			// When pressing ctrl-s, we save the graph
 			EditorSceneManager.sceneSaved += _ => SaveGraphToDisk();
 			
+			RemoveNodeViews();
+			RemoveEdges();
+			RemoveGroups();
+			RemoveStackNodeViews();
+
 			InitializeGraphView();
 			InitializeNodeViews();
 			InitializeEdgeViews();
@@ -470,7 +479,14 @@ namespace GraphProcessor
 
 			InitializeView();
 		}
-
+		
+		/// <summary>
+		/// Allow you to create your own edge connector listener
+		/// </summary>
+		/// <returns></returns>
+		protected virtual BaseEdgeConnectorListener CreateEdgeConnectorListener()
+			=> new BaseEdgeConnectorListener(this);
+		
 		void InitializeGraphView()
 		{
 			graph.onExposedParameterListChanged += () => onExposedParameterListChanged?.Invoke();
@@ -493,6 +509,9 @@ namespace GraphProcessor
 
 		void InitializeEdgeViews()
 		{
+			// Sanitize edges in case a node broke something while loading
+			graph.edges.RemoveAll(edge => edge == null || edge.inputNode == null || edge.outputNode == null);
+			
 			foreach (var serializedEdge in graph.edges)
 			{
 				nodeViewsPerNode.TryGetValue(serializedEdge.inputNode, out var inputNodeView);
@@ -544,7 +563,7 @@ namespace GraphProcessor
 
 		#region Graph content modification
 
-		public bool AddNode(BaseNode node)
+		public BaseNodeView AddNode(BaseNode node)
 		{
 			// This will initialize the node using the graph instance
 			graph.AddNode(node);
@@ -552,11 +571,11 @@ namespace GraphProcessor
 			var view = AddNodeView(node);
 			
 			// Call create after the node have been initialized
-			view.OnCreated();
+			ExceptionToLog.Call(() => view.OnCreated());
 
 			UpdateComputeOrder();
 			
-			return true;
+			return view;
 		}
 
 		public BaseNodeView AddNodeView(BaseNode node)
@@ -589,6 +608,13 @@ namespace GraphProcessor
 				RemoveElement(nodeView);
 			nodeViews.Clear();
 			nodeViewsPerNode.Clear();
+		}
+		
+		void RemoveStackNodeViews()
+		{
+			foreach (var stackView in stackNodeViews)
+				RemoveElement(stackView);
+			stackNodeViews.Clear();
 		}
 
         public GroupView AddGroup(Group block)
@@ -872,7 +898,12 @@ namespace GraphProcessor
 
 			UpdateViewTransform(graph.position, graph.scale);
 		}
-
+		
+		/// <summary>
+		/// Deletes the selected content, can be called form an IMGUI container
+		/// </summary>
+		public void DelayedDeleteSelection() => this.schedule.Execute(() => DeleteSelectionOperation("Delete", AskUser.DontAskUser)).ExecuteLater(0);
+		
 		protected virtual void InitializeView() {}
 
 		public virtual IEnumerable< KeyValuePair< string, Type > > FilterCreateNodeMenuEntries()

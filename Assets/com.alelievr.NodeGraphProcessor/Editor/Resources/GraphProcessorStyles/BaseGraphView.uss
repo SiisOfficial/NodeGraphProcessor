@@ -109,6 +109,10 @@ ParameterNodeView.parameter-Collider #parameterIcon, ExposedParameterFieldView.p
     background-image: resource("BoxCollider Icon");
 }
 
+ParameterNodeView.parameter-Collider2D #parameterIcon, ExposedParameterFieldView.parameter-Collider2D .pill #contents > #top > Image#icon {
+    background-image: resource("BoxCollider2D Icon");
+}
+
 ParameterNodeView.parameter-AudioSource #parameterIcon, ExposedParameterFieldView.parameter-AudioSource .pill #contents > #top > Image#icon {
     background-image: resource("AudioSource Icon");
 }
@@ -179,6 +183,10 @@ ExposedParameterFieldView.parameter-Rigidbody #node-border {
 }
 
 ExposedParameterFieldView.parameter-Collider #node-border {
+    border-color: #55c129;
+}
+
+ExposedParameterFieldView.parameter-Collider2D #node-border {
     border-color: #55c129;
 }
 

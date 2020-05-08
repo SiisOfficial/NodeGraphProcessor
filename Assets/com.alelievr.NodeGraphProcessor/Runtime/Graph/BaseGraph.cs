@@ -33,6 +33,7 @@ namespace GraphProcessor
 		public SerializableEdge	addedEdge;
 		public BaseNode			removedNode;
 		public BaseNode			addedNode;
+		public BaseNode nodeChanged;
 		public Group		addedGroups;
 		public Group		removedGroups;
 		public BaseStackNode addedStackNode;
@@ -105,6 +106,12 @@ namespace GraphProcessor
 			isEnabled = true;
 			onEnabled?.Invoke();
         }
+		
+		protected virtual void OnDisable()
+		{
+			foreach (var node in nodes)
+				node.DisableInternal();
+		}
 
 		public BaseNode AddNode(BaseNode node)
 		{
@@ -183,6 +190,7 @@ namespace GraphProcessor
 				{
 					onGraphChanges?.Invoke(new GraphChanges{ removedEdge = r });
 					r.inputNode?.OnEdgeDisconnected(r);
+					r.outputNode?.OnEdgeDisconnected(r);
 				}
 				return r.GUID == edgeGUID;
 			});
@@ -219,6 +227,12 @@ namespace GraphProcessor
 			stackNodes.Remove(stackNode);
 			onGraphChanges?.Invoke(new GraphChanges{ removedStackNode = stackNode });
 		}
+		
+		/// <summary>
+		/// Invoke the onGraphChanges event, can be used as trigger to execute the graph when the content of a node is changed 
+		/// </summary>
+		/// <param name="node"></param>
+		public void NotifyNodeChanged(BaseNode node) => onGraphChanges?.Invoke(new GraphChanges { nodeChanged = node });
 		
 		public PinnedElement OpenPinned(Type viewType)
 		{
