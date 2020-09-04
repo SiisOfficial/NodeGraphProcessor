@@ -129,7 +129,7 @@ public class ConditionalProcessor : BaseGraphProcessor
                                 
 //                                while(!wNode.isFinished)
 //                                {
-                                //    Yemiyor.
+                                //    Yemiyor.    //TODO: WaitableNode
 //                                    yield return null;
 //                                }
 

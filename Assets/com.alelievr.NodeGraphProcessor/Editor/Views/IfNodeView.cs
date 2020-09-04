@@ -17,6 +17,6 @@ public class IfNodeView : ConditionalNodeView
 
         // Create your fields using node's variables and add them to the controlsContainer
 
-		controlsContainer.Add(new Label($"Last Evaluation: {node.condition}"));
+		//controlsContainer.Add(new Label($"Last Evaluation: {node.condition}"));
 	}
 }

@@ -1,7 +1,7 @@
 NodeSettingsView {
     position: absolute;
-    min-width: 150px;
-    max-width: 250px;
+    min-width: 110px;
+    max-width: 300px;
     -unity-slice-top: 40;
     -unity-slice-left: 80;
     -unity-slice-right: 25;
@@ -19,8 +19,14 @@ NodeSettingsView Label#header {
 }
 
 NodeSettingsView Label.unity-text-element {
-    min-width: 100px;
+    min-width: 50px;
     font-size: 10px;
+    padding-right: 6px;
+}
+
+NodeSettingsView .unity-base-field > .unity-base-field__input {
+    justify-content: flex-end;
+    min-width: 20px;
 }
 
 NodeSettingsView > #mainContainer {

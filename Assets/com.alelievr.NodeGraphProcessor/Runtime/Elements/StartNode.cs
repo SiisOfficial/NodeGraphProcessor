@@ -5,13 +5,15 @@ using GraphProcessor;
 using System.Linq;
 using System.Reflection;
 
-[System.Serializable, NodeMenuItem("Conditional/Start")]
+[System.Serializable, NodeMenuItem("Start")]
 public class StartNode : BaseNode, IConditionalNode
 {
 	[Output(name = "Executes")]
 	public ConditionalLink		executes;
 
 	public override string		name => "Start";
+
+	public override string headerClass => "start-node";
 
 	public IEnumerable< ConditionalNode >	GetExecutedNodes()
 	{

@@ -28,13 +28,13 @@ namespace GraphProcessor
 		protected Dictionary< string, List< PortView > > portsPerFieldName = new Dictionary< string, List< PortView > >();
 
         protected VisualElement 				controlsContainer;
-		protected VisualElement					debugContainer;
+		// protected VisualElement					debugContainer;
 
 		VisualElement							settings;
 		NodeSettingsView settingsContainer;
 		VisualElement							settingButton;
 
-		Label									computeOrderLabel = new Label();
+		// Label									computeOrderLabel = new Label();
 
 		public event Action< PortView >			onPortConnected;
 		public event Action< PortView >			onPortDisconnected;
@@ -77,8 +77,9 @@ namespace GraphProcessor
 			this.owner = owner;
 
 			owner.computeOrderUpdated += ComputeOrderUpdatedCallback;
-			node.onMessageAdded += AddMessageView;
-			node.onMessageRemoved += RemoveMessageView;
+			node.onMessageAdded       += AddMessageView;
+			node.onMessageRemoved     += RemoveMessageView;
+			node.onPortsUpdated       += UpdatePortsForField;
 
             styleSheets.Add(Resources.Load<StyleSheet>(baseNodeStyle));
 
@@ -87,7 +88,8 @@ namespace GraphProcessor
 
 			InitializePorts();
 			InitializeView();
-			InitializeDebug();
+			// InitializeDebug();
+			ComputeOrderUpdatedCallback();
 
 			ExceptionToLog.Call(() => Enable());
 
@@ -118,12 +120,36 @@ namespace GraphProcessor
 
 		void InitializeView()
 		{
-            controlsContainer = new VisualElement{ name = "controls" };
+            controlsContainer         = new VisualElement{ name = "controls" };
+			mainContainer.parent.name = nodeTarget.GUID;
 			mainContainer.Add(controlsContainer);
-
-			debugContainer = new VisualElement{ name = "debug" };
-			if (nodeTarget.debug)
-				mainContainer.Add(debugContainer);
+			
+			if (nodeTarget.showControlsOnHover)
+			{
+				bool mouseOverControls = false;
+				controlsContainer.style.display = DisplayStyle.None;
+				RegisterCallback<MouseOverEvent>(e => {
+					controlsContainer.style.display = DisplayStyle.Flex;
+					mouseOverControls               = true;
+				});
+				RegisterCallback<MouseOutEvent>(e => {
+					var rect               = GetPosition();
+					var graphMousePosition = owner.contentViewContainer.WorldToLocal(e.mousePosition);
+					if (rect.Contains(graphMousePosition) || !nodeTarget.showControlsOnHover)
+						return;
+					mouseOverControls = false;
+					schedule.Execute(_ => {
+						if (!mouseOverControls)
+							controlsContainer.style.display = DisplayStyle.None;
+					}).ExecuteLater(500);
+				});
+			}
+			
+			Undo.undoRedoPerformed += UpdateFieldValues;
+			//
+			// debugContainer = new VisualElement{ name = "debug" };
+			// if (nodeTarget.debug)
+			// 	mainContainer.Add(debugContainer);
 
 			title = (string.IsNullOrEmpty(nodeTarget.name)) ? nodeTarget.GetType().Name : nodeTarget.name;
 
@@ -157,6 +183,12 @@ namespace GraphProcessor
 					titleContainer.Add(nextLink);
 				}
 			}
+			
+			if(nodeTarget.headerClass != "")
+				titleContainer.AddToClassList(nodeTarget.headerClass);
+			
+			if(nodeTarget.nodeClass != "")
+				contentContainer.AddToClassList(nodeTarget.nodeClass);
 		}
 
 		void InitializeSettings()
@@ -243,12 +275,12 @@ namespace GraphProcessor
 				settingsExpanded          = false;
 			}
 		}
-
-		void InitializeDebug()
-		{
-			ComputeOrderUpdatedCallback();
-			debugContainer.Add(computeOrderLabel);
-		}
+		//
+		// void InitializeDebug()
+		// {
+		// 	ComputeOrderUpdatedCallback();
+		// 	debugContainer.Add(computeOrderLabel);
+		// }
 
 		#endregion
 
@@ -278,7 +310,7 @@ namespace GraphProcessor
 		public PortView AddPort(FieldInfo fieldInfo, Direction direction, BaseEdgeConnectorListener listener, PortData portData)
 		{
 			// TODO: hardcoded value
-			PortView p = new PortView(Orientation.Horizontal, direction, fieldInfo, portData, listener);
+			PortView p = PortView.CreatePV(Orientation.Horizontal, direction, fieldInfo, portData, listener);
 
 			if (p.direction == Direction.Input)
 			{
@@ -304,6 +336,14 @@ namespace GraphProcessor
 
 			return p;
 		}
+		
+		public void InsertPort(PortView portView, int index)
+		{
+			if (portView.direction == Direction.Input)
+				inputContainer.Insert(index, portView);
+			else
+				outputContainer.Insert(index, portView);
+		}
 
 		public void RemovePort(PortView p)
 		{
@@ -314,13 +354,13 @@ namespace GraphProcessor
 
 			if (p.direction == Direction.Input)
 			{
-				inputPortViews.Remove(p);
-				inputContainer.Remove(p);
+				if (inputPortViews.Remove(p))
+					inputContainer.Remove(p);
 			}
 			else
 			{
-				outputPortViews.Remove(p);
-				outputContainer.Remove(p);
+				if (outputPortViews.Remove(p))
+					outputContainer.Remove(p);
 			}
 
 			List< PortView > ports;
@@ -464,20 +504,20 @@ namespace GraphProcessor
 			if (script != null)
 				AssetDatabase.OpenAsset(script.GetInstanceID(), 0, 0);
 		}
-
-		public void ToggleDebug()
-		{
-			nodeTarget.debug = !nodeTarget.debug;
-			UpdateDebugView();
-		}
-
-		public void UpdateDebugView()
-		{
-			if (nodeTarget.debug)
-				mainContainer.Add(debugContainer);
-			else
-				mainContainer.Remove(debugContainer);
-		}
+		//
+		// public void ToggleDebug()
+		// {
+		// 	nodeTarget.debug = !nodeTarget.debug;
+		// 	UpdateDebugView();
+		// }
+		//
+		// public void UpdateDebugView()
+		// {
+		// 	if (nodeTarget.debug)
+		// 		mainContainer.Add(debugContainer);
+		// 	else
+		// 		mainContainer.Remove(debugContainer);
+		// }
 
 		public void AddMessageView(string message, Texture icon, Color color)
 			=> AddBadge(new NodeBadgeView(message, icon, color));
@@ -543,10 +583,31 @@ namespace GraphProcessor
 
 		#region Callbacks & Overrides
 
+		readonly VisualElement infiniteLoopContainer = new VisualElement{ name = "infinite-loop-error" };
+		readonly VisualElement infiniteLoopLabel     = new Label("Infinite Loop Error!");
+		
 		void ComputeOrderUpdatedCallback()
 		{
 			//Update debug compute order
-			computeOrderLabel.text = "Compute order: " + nodeTarget.computeOrder;
+			// computeOrderLabel.text = "Compute order: " + nodeTarget.computeOrder;
+			if(nodeTarget.computeOrder == BaseGraph.loopComputeOrder)
+			{
+				AddToClassList("infinite-loop-error");
+				if(mainContainer.Q("infinite-loop-error") == null)
+				{
+					infiniteLoopLabel.tooltip              = "This node won't work if you don't fix the recursive loop.";
+					infiniteLoopLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+					infiniteLoopContainer.Add(infiniteLoopLabel);
+					mainContainer.Add(infiniteLoopContainer);
+					infiniteLoopContainer.SendToBack();
+				}
+			}
+			else
+			{
+				RemoveFromClassList("infinite-loop-error");
+				if(mainContainer.Q("infinite-loop-error") != null)
+					mainContainer.Remove(infiniteLoopContainer);
+			}
 		}
 
 		public virtual void Enable()
@@ -561,12 +622,17 @@ namespace GraphProcessor
 			inputContainerElement.SendToBack();
 			inputContainerElement.pickingMode = PickingMode.Ignore;
 		}
+		
+		Dictionary<string, List<(object value, VisualElement target)>> visibleConditions = new Dictionary<string, List<(object value, VisualElement target)>>();
+		Dictionary<FieldInfo, List<VisualElement>>                     fieldControlsMap  = new Dictionary<FieldInfo, List<VisualElement>>();
 
 		protected virtual void DrawDefaultInspector()
 		{
 			AddInputContainer();
+			
 			var fields = nodeTarget.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-
+			
+			visibleConditions.Clear();
 			foreach(var field in fields)
 			{
 				var isSerializedInput = false;
@@ -629,21 +695,61 @@ namespace GraphProcessor
 
 			return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(returnedName);
 		}
+		
+		void UpdateFieldVisibility(string fieldName, object newValue)
+		{
+			if (visibleConditions.TryGetValue(fieldName, out var list))
+			{
+				foreach (var elem in list)
+				{
+					if (newValue.Equals(elem.value))
+						elem.target.style.display = DisplayStyle.Flex;
+					else
+						elem.target.style.display = DisplayStyle.None;
+				}
+			}
+		}
+		
+		void UpdateOtherFieldValueSpecific<T>(FieldInfo field, object newValue)
+		{
+			foreach(var inputField in fieldControlsMap[field])
+			{
+				(inputField as INotifyValueChanged<T>)?.SetValueWithoutNotify((T) newValue);
+			}
+		}
 
-		protected void AddControlField(string fieldName, string label = null, bool isSerializedInput = false, Action valueChangedCallback = null)
+		static MethodInfo specificUpdateOtherFieldValue = typeof(BaseNodeView).GetMethod(nameof(UpdateOtherFieldValueSpecific), BindingFlags.NonPublic | BindingFlags.Instance);
+		void UpdateOtherFieldValue(FieldInfo info, object newValue)
+		{
+			// Warning: Keep in sync with FieldFactory CreateField
+			var fieldType     = info.FieldType.IsSubclassOf(typeof(UnityEngine.Object)) ? typeof(UnityEngine.Object) : info.FieldType;
+			var genericUpdate = specificUpdateOtherFieldValue.MakeGenericMethod(fieldType);
+
+			genericUpdate.Invoke(this, new object[]{info, newValue});
+		}
+		
+		protected VisualElement AddControlField(string fieldName, string label = null, bool isSerializedInput = false, Action valueChangedCallback = null)
 			=> AddControlField(nodeTarget.GetType().GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance), label, isSerializedInput, valueChangedCallback);
 
-		protected void AddControlField(FieldInfo field, string label = null, bool isSerializedInput = false, Action valueChangedCallback = null)
+		protected VisualElement AddControlField(FieldInfo field, string label = null, bool isSerializedInput = false, Action valueChangedCallback = null)
 		{
 			if (field == null)
-				return;
+				return null;
 	
 			var element = FieldFactory.CreateField(field.FieldType, field.GetValue(nodeTarget), (newValue) => {
 				owner.RegisterCompleteObjectUndo("Updated " + newValue);
 				field.SetValue(nodeTarget, newValue);
 				NotifyNodeChanged();
 				valueChangedCallback?.Invoke();
+				UpdateFieldVisibility(field.Name, newValue);
+				// When you have the node inspector, it's possible to have multiple input fields pointing to the same
+				// property. We need to update those manually otherwise they still have the old value in the inspector.
+				UpdateOtherFieldValue(field, newValue);
 			}, isSerializedInput ? "" : label);
+			
+			if (!fieldControlsMap.TryGetValue(field, out var inputFieldList))
+				inputFieldList = fieldControlsMap[field] = new List<VisualElement>();
+			inputFieldList.Add(element);
 
 			if(element != null)
 			{
@@ -660,6 +766,26 @@ namespace GraphProcessor
 					controlsContainer.Add(element);
 				}
 			}
+			
+			var visibleCondition = field.GetCustomAttribute(typeof(VisibleIf)) as VisibleIf;
+			if (visibleCondition != null)
+			{
+				// Check if target field exists:
+				var conditionField = nodeTarget.GetType().GetField(visibleCondition.fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+				if (conditionField == null)
+					Debug.LogError($"[VisibleIf] Field {visibleCondition.fieldName} does not exists in node {nodeTarget.GetType()}");
+				else
+				{
+					visibleConditions.TryGetValue(visibleCondition.fieldName, out var list);
+					if (list == null)
+						list = visibleConditions[visibleCondition.fieldName] = new List<(object value, VisualElement target)>();
+					list.Add((visibleCondition.value, element));
+					// TODO
+					UpdateFieldVisibility(visibleCondition.fieldName, conditionField.GetValue(nodeTarget));
+				}
+			}
+
+			return element;
 		}
 		protected void AddSettingField(FieldInfo field)
 		{
@@ -678,6 +804,13 @@ namespace GraphProcessor
 				settingsContainer.Add(element);
 				element.name = field.Name;
 			}
+		}
+		
+		void UpdateFieldValues()
+		{
+			if(!(EditorWindow.focusedWindow is BaseGraphWindow)) return;
+			foreach (var kp in fieldControlsMap)
+				UpdateOtherFieldValue(kp.Key, kp.Key.GetValue(nodeTarget));
 		}
 
 		internal void OnPortConnected(PortView port)
@@ -698,7 +831,10 @@ namespace GraphProcessor
 
 		// TODO: a function to force to reload the custom behavior ports (if we want to do a button to add ports for example)
 
-		public virtual void OnRemoved() {}
+		public virtual void OnRemoved()
+		{
+			Undo.undoRedoPerformed -= UpdateFieldValues;
+		}
 		public virtual void OnCreated() {}
 
 		public override void SetPosition(Rect newPos)
@@ -726,6 +862,14 @@ namespace GraphProcessor
         public void ChangeLockStatus()
         {
             nodeTarget.nodeLock ^= true;
+			if(nodeTarget.nodeLock)
+			{
+				AddToClassList("locked-node");
+			}
+			else
+			{
+				RemoveFromClassList("locked-node");
+			}
         }
 
         public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
@@ -743,7 +887,7 @@ namespace GraphProcessor
 			
 			evt.menu.AppendAction("Open Node Script", (e) => OpenNodeScript(), OpenNodeScriptStatus);
 			evt.menu.AppendAction("Open Node View Script", (e) => OpenNodeViewScript(), OpenNodeViewScriptStatus);
-			evt.menu.AppendAction("Debug", (e) => ToggleDebug(), DebugStatus);
+			// evt.menu.AppendAction("Debug", (e) => ToggleDebug(), DebugStatus);
             if (nodeTarget.unlockable)
                 evt.menu.AppendAction((nodeTarget.isLocked ? "Unlock" : "Lock"), (e) => ChangeLockStatus(), LockStatus);
         }
@@ -752,13 +896,13 @@ namespace GraphProcessor
         {
             return Status.Normal;
         }
-
-        Status DebugStatus(DropdownMenuAction action)
-		{
-			if (nodeTarget.debug)
-				return Status.Checked;
-			return Status.Normal;
-		}
+  //
+  //       Status DebugStatus(DropdownMenuAction action)
+		// {
+		// 	if (nodeTarget.debug)
+		// 		return Status.Checked;
+		// 	return Status.Normal;
+		// }
 
 		Status AlignToLeftStatus(DropdownMenuAction action)
 		{
@@ -816,9 +960,10 @@ namespace GraphProcessor
 			return Status.Disabled;
 		}
 
-		void SyncPortCounts(IEnumerable< NodePort > ports, IEnumerable< PortView > portViews)
+		IEnumerable<PortView> SyncPortCounts(IEnumerable< NodePort > ports, IEnumerable< PortView > portViews)
 		{
-			var listener = owner.connectorListener;
+			var listener     = owner.connectorListener;
+			var portViewList = portViews.ToList();
 
 			// Maybe not good to remove ports as edges are still connected :/
 			foreach (var pv in portViews.ToList())
@@ -826,7 +971,10 @@ namespace GraphProcessor
 				// If the port have disappeared from the node data, we remove the view:
 				// We can use the identifier here because this function will only be called when there is a custom port behavior
 				if (!ports.Any(p => p.portData.identifier == pv.portData.identifier))
+				{
 					RemovePort(pv);
+					portViewList.Remove(pv);
+				}
 			}
 
 			foreach (var p in ports)
@@ -835,8 +983,30 @@ namespace GraphProcessor
 				if (!portViews.Any(pv => p.portData.identifier == pv.portData.identifier))
 				{
 					Direction portDirection = nodeTarget.IsFieldInput(p.fieldName) ? Direction.Input : Direction.Output;
-					AddPort(p.fieldInfo, portDirection, listener, p.portData);
+					var       pv            = AddPort(p.fieldInfo, portDirection, listener, p.portData);
+					portViewList.Add(pv);
 				}
+			}
+			
+			return portViewList;
+		}
+
+		void SyncPortOrder(IEnumerable< NodePort > ports, IEnumerable< PortView > portViews)
+		{
+			var portViewList = portViews.ToList();
+			var portsList    = ports.ToList();
+
+			// Re-order the port views to match the ports order in case a custom behavior re-ordered the ports
+			for (int i = 0; i < portsList.Count; i++)
+			{
+				if(portsList[i].portData.displayType == typeof(ConditionalLink))
+					continue;
+
+				var id = portsList[i].portData.identifier;
+
+				var pv = portViewList.FirstOrDefault(p => p.portData.identifier == id);
+				if (pv != null)
+					InsertPort(pv, i);
 			}
 		}
 
@@ -882,9 +1052,10 @@ namespace GraphProcessor
 					var p = ports.GroupBy(n => n.fieldName);
 					var pv = portViews.GroupBy(v => v.fieldName);
 					p.Zip(pv, (portPerFieldName, portViewPerFieldName) => {
+						IEnumerable< PortView > portViewsList = portViewPerFieldName;
 						if (portPerFieldName.Count() != portViewPerFieldName.Count())
-							SyncPortCounts(portPerFieldName, portViewPerFieldName);
-						// UpdatePortConnections(portViewPerFieldName.ToList());
+							portViewsList = SyncPortCounts(portPerFieldName, portViewPerFieldName);
+						SyncPortOrder(portPerFieldName, portViewsList);
 						// We don't care about the result, we just iterate over port and portView
 						return "";
 					}).ToList();
@@ -894,11 +1065,7 @@ namespace GraphProcessor
 				// so we can update the view with the new port data (if the name of a port have been changed for example)
 
 				for (int i = 0; i < portViews.Count; i++)
-				{
-					var pv = portViews[i];
-
-					pv.UpdatePortView(ports[i].portData.displayName, ports[i].portData.displayType);
-				}
+					if(ports[i] != null) portViews[i].UpdatePortView(ports[i].portData);
 			}
 
 			return base.RefreshPorts();
@@ -911,6 +1078,12 @@ namespace GraphProcessor
 			RefreshPorts();
 		}
 		
+		void UpdatePortsForField(string fieldName)
+		{
+			// TODO: actual code
+			RefreshPorts();
+		}
+
 		protected virtual VisualElement CreateSettingsView() => new Label("Settings") {name = "header"};
 		protected virtual VisualElement PrepareSettingsView() => null;
 		

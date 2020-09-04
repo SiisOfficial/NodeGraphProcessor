@@ -72,6 +72,8 @@ namespace GraphProcessor
 
 		public void InitializeGraph(BaseGraph graph)
 		{
+			//if(graph == this.graph) return;	//	TODO: This blocks reloading the window
+
 			if (this.graph != null && graph != this.graph)
 			{
 				// Save the graph to the disk
@@ -81,7 +83,7 @@ namespace GraphProcessor
 				graphUnloaded?.Invoke(this.graph);
 				Resources.UnloadAsset(this.graph);
 			}
-
+			
 			graphLoaded?.Invoke(graph);
 			this.graph = graph;
 

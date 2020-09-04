@@ -15,9 +15,10 @@ using Object = UnityEngine.Object;
 
 namespace GraphProcessor
 {
-	public class BaseGraphView : GraphView
+	public class BaseGraphView : GraphView, IDisposable
 	{
 		public delegate void ComputeOrderUpdatedDelegate();
+		public delegate void NodeDuplicatedDelegate(BaseNode duplicatedNode, BaseNode newNode);
 
 		public BaseGraph							graph;
 
@@ -44,8 +45,23 @@ namespace GraphProcessor
 
 		// Safe event relay from BaseGraph (safe because you are sure to always point on a valid BaseGraph
 		// when one of these events is called), a graph switch can occur between two call tho
+		/// <summary>
+		/// Same event than BaseGraph.onExposedParameterListChanged
+		/// Safe event (not triggered in case the graph is null).
+		/// </summary>
 		public event Action				onExposedParameterListChanged;
+				
+		/// <summary>
+		/// Same event than BaseGraph.onExposedParameterModified
+		/// Safe event (not triggered in case the graph is null).
+		/// </summary>
 		public event Action< string >	onExposedParameterModified;
+		
+		/// <summary>
+		/// Triggered when a node is duplicated (crt-d) or copy-pasted (crtl-c/crtl-v)
+		/// </summary>
+		public event NodeDuplicatedDelegate nodeDuplicated;
+
 
 		public BaseGraphView(EditorWindow window)
 		{
@@ -65,7 +81,7 @@ namespace GraphProcessor
 
 			InitializeManipulators();
 
-			SetupZoom(0.33f, 1.75f);
+			SetupZoom(0.3f, 1.8f);
 
 			Undo.undoRedoPerformed += ReloadView;
 
@@ -73,11 +89,6 @@ namespace GraphProcessor
 			createNodeMenu.Initialize(this, window);
 
 			this.StretchToParentSize();
-		}
-
-		~BaseGraphView()
-		{
-			Undo.undoRedoPerformed -= ReloadView;
 		}
 
 		#region Callbacks
@@ -96,19 +107,15 @@ namespace GraphProcessor
 		{
 			var data = new CopyPasteHelper();
 
-			foreach (var nodeView in elements.Where(e => e is BaseNodeView))
-			{
-				var node = ((nodeView) as BaseNodeView).nodeTarget;
-				data.copiedNodes.Add(JsonSerializer.SerializeNode(node));
-			}
+			foreach (BaseNodeView nodeView in elements.Where(e => e is BaseNodeView))
+				data.copiedNodes.Add(JsonSerializer.SerializeNode(nodeView.nodeTarget));
 
-			foreach (var groupView in elements.Where(e => e is GroupView))
-			{
-				var group = (groupView as GroupView).group;
-				data.copiedGroups.Add(JsonSerializer.Serialize(group));
-			}
-
-
+			foreach (GroupView groupView in elements.Where(e => e is GroupView))
+				data.copiedGroups.Add(JsonSerializer.Serialize(groupView.group));
+			
+			foreach (EdgeView edgeView in elements.Where(e => e is EdgeView))
+				data.copiedEdges.Add(JsonSerializer.Serialize(edgeView.serializedEdge));
+			
 			ClearSelection();
 
 			return JsonUtility.ToJson(data, true);
@@ -128,7 +135,9 @@ namespace GraphProcessor
 			var data = JsonUtility.FromJson< CopyPasteHelper >(serializedData);
 
             RegisterCompleteObjectUndo(operationName);
-
+			
+			Dictionary<string, BaseNode> copiedNodesMap = new Dictionary<string, BaseNode>();
+			
 			foreach (var serializedNode in data.copiedNodes)
 			{
 				var node = JsonSerializer.DeserializeNode(serializedNode);
@@ -136,12 +145,20 @@ namespace GraphProcessor
 				if (node == null)
 					continue ;
 
+				string sourceGUID = node.GUID;
+				graph.nodesPerGUID.TryGetValue(sourceGUID, out var sourceNode);
+				
 				//Call OnNodeCreated on the new fresh copied node
 				node.OnNodeCreated();
 				//And move a bit the new node
 				node.position.position += new Vector2(20, 20);
 
-				AddNode(node);
+				var newNodeView = AddNode(node);
+
+				// If the nodes were copied from another graph, then the source is null
+				if (sourceNode != null)
+					nodeDuplicated?.Invoke(sourceNode, node);
+				copiedNodesMap[sourceGUID] = node;
 
 				//Select the new node
 				AddToSelection(nodeViewsPerNode[node]);
@@ -151,9 +168,64 @@ namespace GraphProcessor
             {
 				var group = JsonSerializer.Deserialize<Group>(serializedGroup);
 				group.OnCreated();
+				// try to centre the created node in the screen
 				group.position.position += new Vector2(20, 20);
+				
+				var oldGUIDList = group.innerNodeGUIDs.ToList();
+				group.innerNodeGUIDs.Clear();
+				foreach (var guid in oldGUIDList)
+				{
+					graph.nodesPerGUID.TryGetValue(guid, out var node);
+
+					// In case group was copied from another graph
+					if (node == null)
+					{
+						copiedNodesMap.TryGetValue(guid, out node);
+						group.innerNodeGUIDs.Add(node.GUID);
+					}
+					else
+					{
+						group.innerNodeGUIDs.Add(copiedNodesMap[guid].GUID);
+					}
+				}
+				
 				AddGroup(group);
             }
+			
+			foreach (var serializedEdge in data.copiedEdges)
+			{
+				var edge = JsonSerializer.Deserialize<SerializableEdge>(serializedEdge);
+
+				edge.Deserialize();
+
+				// Find port of new nodes:
+				copiedNodesMap.TryGetValue(edge.inputNode.GUID, out var oldInputNode);
+				copiedNodesMap.TryGetValue(edge.outputNode.GUID, out var oldOutputNode);
+
+				// We avoid to break the graph by replacing unique connections:
+				if (oldInputNode == null && !edge.inputPort.portData.acceptMultipleEdges || !edge.outputPort.portData.acceptMultipleEdges)
+					continue;
+
+				oldInputNode  = oldInputNode ?? edge.inputNode;
+				oldOutputNode = oldOutputNode ?? edge.outputNode;
+
+				var inputPort  = oldInputNode.GetPort(edge.inputPort.fieldName, edge.inputPortIdentifier);
+				var outputPort = oldOutputNode.GetPort(edge.outputPort.fieldName, edge.outputPortIdentifier);
+
+				var newEdge = SerializableEdge.CreateNewEdge(graph, inputPort, outputPort);
+
+				if(nodeViewsPerNode.ContainsKey(oldInputNode) && nodeViewsPerNode.ContainsKey(oldOutputNode))
+				{
+					var edgeView = new EdgeView()
+					{
+						userData = newEdge,
+						input    = nodeViewsPerNode[oldInputNode].GetPortViewFromFieldName(newEdge.inputFieldName, newEdge.inputPortIdentifier),
+						output   = nodeViewsPerNode[oldOutputNode].GetPortViewFromFieldName(newEdge.outputFieldName, newEdge.outputPortIdentifier)
+					};
+
+					Connect(edgeView);
+				}
+			}
 		}
 
 		GraphViewChange GraphViewChangedCallback(GraphViewChange changes)
@@ -161,7 +233,20 @@ namespace GraphProcessor
 			if (changes.elementsToRemove != null)
 			{
 				RegisterCompleteObjectUndo("Remove Graph Elements");
-
+				
+				// Destroy priority of objects
+				// We need nodes to be destroyed first because we can have a destroy operation that uses node connections
+				changes.elementsToRemove.Sort((e1, e2) => {
+					int GetPriority(GraphElement e)
+					{
+						if (e is BaseNodeView)
+							return 0;
+						else
+							return 1;
+					}
+					return GetPriority(e1).CompareTo(GetPriority(e2));
+				});
+				
 				//Handle ourselves the edge and node remove
 				changes.elementsToRemove.RemoveAll(e => {
 					switch (e)
@@ -222,6 +307,8 @@ namespace GraphProcessor
 
 		public override List< Port > GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
 		{
+			// (Func<Port, bool>) (nap => nap.direction != startPort.direction && nap.node != startPort.node &&
+			// 						   nodeAdapter.GetAdapter(nap.source, startPort.source) != null)
 			var compatiblePorts = new List< Port >();
 
 			compatiblePorts.AddRange(ports.ToList().Where(p => {
@@ -264,7 +351,7 @@ namespace GraphProcessor
 		protected virtual void BuildGroupContextualMenu(ContextualMenuPopulateEvent evt)
 		{
 			Vector2 position = (evt.currentTarget as VisualElement).ChangeCoordinatesTo(contentViewContainer, evt.localMousePosition);
-			evt.menu.AppendAction("New Group", (e) => AddSelectionsToGroup(AddGroup(new Group("New Group", position))), DropdownMenuAction.AlwaysEnabled);
+			//evt.menu.AppendAction("New Group", (e) => AddSelectionsToGroup(AddGroup(new Group("New Group", position))), DropdownMenuAction.AlwaysEnabled);
 		}
 
 		protected void BuildViewContextualMenu(ContextualMenuPopulateEvent evt)
@@ -295,6 +382,13 @@ namespace GraphProcessor
 
 		protected virtual void KeyDownCallback(KeyDownEvent e)
 		{
+			if(EditorWindow.focusedWindow is BaseGraphWindow)
+			{
+				if(e.keyCode == KeyCode.Z && e.commandKey)
+				{
+					//e.StopPropagation();
+				}
+			}
 			if (e.keyCode == KeyCode.S && e.commandKey)
 			{
 				SaveGraphToDisk();
@@ -302,18 +396,31 @@ namespace GraphProcessor
 			}
 			else if(e.keyCode == KeyCode.Backspace || e.keyCode == KeyCode.Delete)
 			{
+				var baseStackNodeViewList    = new List<BaseStackNodeView>();
 				var baseNodeViewList = new List<BaseNodeView>();
-				var nodeCount = 0;
+				var groupViewList    = new List<GroupView>();
+				var stackCount       = 0;
+				var nodeCount        = 0;
+				var groupCount       = 0;
 				
 				foreach(var selectable in selection)
 				{
-					if(selectable is BaseNodeView selectedNodeView)
+					switch(selectable)
 					{
-						baseNodeViewList.Add(selectedNodeView);
-						nodeCount++;
+						case BaseNodeView selectedNodeView:
+							baseNodeViewList.Add(selectedNodeView);
+							nodeCount++;
+							break;
+						case GroupView selectedGroupView:
+							groupViewList.Add(selectedGroupView);
+							groupCount++;
+							break;
+						case BaseStackNodeView baseStackNodeView:
+							baseStackNodeViewList.Add(baseStackNodeView);
+							stackCount++;
+							break;
 					}
 				}
-
 				for(var i = 0; i < nodeCount; i++)
 				{
 					graph.RemoveNode(baseNodeViewList[i].nodeTarget);
@@ -336,8 +443,75 @@ namespace GraphProcessor
 					
 					RemoveNodeView(baseNodeViewList[i]);
 				}
-				
-				if(nodeCount>0) e.StopPropagation();
+
+				for(var i = 0; i < stackCount; i++)
+				{
+					var stackNodeView = baseStackNodeViewList[i];
+					stackNodeView.RemoveAllChildsFromThisStack();
+					// graph.RemoveStackNode(stackNodeView.stackNode);
+					// RemoveStackNodeView(stackNodeView);
+					//ReloadView();
+					//TODO: Remove the stack without removing its nodes.
+				}
+
+				for(var i = 0; i < groupCount; i++)
+				{
+					var graphElement = groupViewList[i];
+					graphElement.RemoveElementsFromThisGroup();
+					graph.RemoveGroup(graphElement.@group);
+					RemoveElement(graphElement);
+				}
+
+				if(nodeCount > 0 || groupCount > 0) e.StopPropagation();
+			} 
+			else if(selection.Count > 0 && e.keyCode == KeyCode.G)
+			{
+				// var position = new Vector2(100000,100000);
+				// var selectedNodeGUIDs = new List<string>();
+				// for(var i = 0; i < selection.Count; i++)
+				// {
+				// 	if(!(selection[i] is BaseNodeView)) continue;
+				// 	
+				// 	var selected = selection[i] as BaseNodeView;
+				// 	
+				// 	if(selected == null) continue;
+				// 	
+				// 	var nodeRect                           = selected.GetPosition();
+				// 	if(nodeRect.x < position.x) position.x = nodeRect.x;
+				// 	if(nodeRect.y < position.y) position.y = nodeRect.y;
+				// 	
+				// 	selectedNodeGUIDs.Add(selected.nodeTarget.GUID);
+				// }
+				// position -= new Vector2(9f,42f);	//	Estimated position
+				// var newGroup     = new Group("New Group", position) {innerNodeGUIDs = selectedNodeGUIDs};
+				// AddGroup(newGroup);
+				//	TODO: Uncomment this when groups are stable.
+				// AddSelectionsToGroup(AddGroup(new Group("New Group", new Vector2(0,0))));
+				// e.StopPropagation();
+			}
+			else if(selection.Count > 0 && e.keyCode == KeyCode.S)
+			{
+				//	TODO: Uncomment this when stacks are stable.
+				// var position = new Vector2(100000,100000);
+				// var selectedNodeGUIDs = new List<string>();
+				// for(var i = 0; i < selection.Count; i++)
+				// {
+				// 	if(!(selection[i] is BaseNodeView)) continue;
+				// 	
+				// 	var selected = selection[i] as BaseNodeView;
+				// 	
+				// 	if(selected == null) continue;
+				// 	
+				// 	var nodeRect                           = selected.GetPosition();
+				// 	if(nodeRect.x < position.x) position.x = nodeRect.x;
+				// 	if(nodeRect.y < position.y) position.y = nodeRect.y;
+				// 	
+				// 	selectedNodeGUIDs.Add(selected.nodeTarget.GUID);
+				// }
+				// position -= new Vector2(10f,30f);	//	Estimated position
+				// var newStack = new BaseStackNode(position) {nodeGUIDs = selectedNodeGUIDs};
+				// AddStackNode(newStack);
+				// e.StopPropagation();
 			}
 			else if(nodeViews.Count > 0 && e.commandKey && e.altKey)
 			{
@@ -395,6 +569,7 @@ namespace GraphProcessor
 			{
 				foreach (var paramFieldView in exposedParameterFieldViews)
 				{
+					RegisterCompleteObjectUndo("Create Parameter Node");
 					var paramNode = BaseNode.CreateFromType< ParameterNode >(mousePos);
 					paramNode.parameterGUID = paramFieldView.parameter.guid;
 					AddNode(paramNode);
@@ -428,6 +603,7 @@ namespace GraphProcessor
 
 		void ReloadView()
 		{
+			if(!(EditorWindow.focusedWindow is BaseGraphWindow)) return;
 			// Force the graph to reload his datas (Undo have updated the serialized properties of the graph
 			// so the one that are not serialized need to be synchronized)
 			graph.Deserialize();
@@ -449,10 +625,14 @@ namespace GraphProcessor
 			UpdateComputeOrder();
 		}
 
-		public void Initialize(BaseGraph graph)
+		public void Initialize(BaseGraph graph, bool reInit = false)
 		{
 			if (this.graph != null)
+			{
 				SaveGraphToDisk();
+				// Close pinned windows from old graph:
+				ClearGraphElements();
+			}
 
 			this.graph = graph;
 
@@ -460,11 +640,8 @@ namespace GraphProcessor
 			
 			// When pressing ctrl-s, we save the graph
 			EditorSceneManager.sceneSaved += _ => SaveGraphToDisk();
-			
-			RemoveNodeViews();
-			RemoveEdges();
-			RemoveGroups();
-			RemoveStackNodeViews();
+
+			ClearGraphElements();
 
 			InitializeGraphView();
 			InitializeNodeViews();
@@ -472,12 +649,20 @@ namespace GraphProcessor
 			InitializeViews();
 			InitializeGroups();
 			InitializeStackNodes();
-
+			
+			initialized?.Invoke();
 			UpdateComputeOrder();
 
-			initialized?.Invoke();
-
 			InitializeView();
+		}
+		
+		public void ClearGraphElements()
+		{
+			RemoveNodeViews();
+			RemoveEdges();
+			RemoveGroups();
+			RemoveStackNodeViews();
+			RemovePinnedElementViews();
 		}
 		
 		/// <summary>
@@ -616,6 +801,16 @@ namespace GraphProcessor
 				RemoveElement(stackView);
 			stackNodeViews.Clear();
 		}
+		
+		void RemovePinnedElementViews()
+		{
+			foreach (var pinnedView in pinnedElements.Values)
+			{
+				if (Contains(pinnedView))
+					Remove(pinnedView);
+			}
+			pinnedElements.Clear();
+		}
 
         public GroupView AddGroup(Group block)
         {
@@ -681,7 +876,7 @@ namespace GraphProcessor
 			groupViews.Clear();
 		}
 
-		public bool ConnectView(EdgeView e, bool autoDisconnectInputs = true)
+		public bool CanConnectEdge(EdgeView e, bool autoDisconnectInputs = true)
 		{
 			if (e.input == null || e.output == null)
 				return false;
@@ -696,6 +891,18 @@ namespace GraphProcessor
 				Debug.LogError("Connect aborted !");
 				return false;
 			}
+			return true;
+		}
+
+		public bool ConnectView(EdgeView e, bool autoDisconnectInputs = true)
+		{
+			if (!CanConnectEdge(e, autoDisconnectInputs))
+				return false;
+
+			var inputPortView  = e.input as PortView;
+			var outputPortView = e.output as PortView;
+			var inputNodeView  = inputPortView.node as BaseNodeView;
+			var outputNodeView = outputPortView.node as BaseNodeView;
 				
 			//If the input port does not support multi-connection, we remove them
 			if (autoDisconnectInputs && !(e.input as PortView).portData.acceptMultipleEdges)
@@ -732,15 +939,41 @@ namespace GraphProcessor
 
 			inputNodeView.RefreshPorts();
 			outputNodeView.RefreshPorts();
-
+			
+			// In certain cases the edge color is wrong so we patch it
+			schedule.Execute(() => {
+				e.UpdateEdgeControl();
+			}).ExecuteLater(1);
+			
 			e.isConnected = true;
 
 			return true;
 		}
+		
+		public bool Connect(PortView inputPortView, PortView outputPortView, bool autoDisconnectInputs = true)
+		{
+			var inputPort  = inputPortView.owner.nodeTarget.GetPort(inputPortView.fieldName, inputPortView.portData.identifier);
+			var outputPort = outputPortView.owner.nodeTarget.GetPort(outputPortView.fieldName, outputPortView.portData.identifier);
+
+			// Checks that the node we are connecting still exists
+			if (inputPortView.owner.parent == null || outputPortView.owner.parent == null)
+				return false;
+			
+			var newEdge = SerializableEdge.CreateNewEdge(graph, inputPort, outputPort);
+
+			var edgeView = new EdgeView()
+			{
+				userData = newEdge,
+				input    = inputPortView,
+				output   = outputPortView,
+			};
+
+			return Connect(edgeView);
+		}
 
 		public bool Connect(EdgeView e, bool autoDisconnectInputs = true)
 		{
-			if (!ConnectView(e, autoDisconnectInputs))
+			if (!CanConnectEdge(e, autoDisconnectInputs))
 				return false;
 
 			var inputPortView = e.input as PortView;
@@ -751,6 +984,8 @@ namespace GraphProcessor
 			var outputPort = outputNodeView.nodeTarget.GetPort(outputPortView.fieldName, outputPortView.portData.identifier);
 
 			e.userData = graph.Connect(inputPort, outputPort, autoDisconnectInputs);
+			
+			ConnectView(e, autoDisconnectInputs);
 
 			UpdateComputeOrder();
 
@@ -782,14 +1017,14 @@ namespace GraphProcessor
 
 		public void Disconnect(EdgeView e, bool refreshPorts = true)
 		{
-			DisconnectView(e, refreshPorts);
-
 			// Remove the serialized edge if there is one
 			if (e.userData is SerializableEdge serializableEdge)
 			{
 				graph.Disconnect(serializableEdge.GUID);
 			}
 			
+			DisconnectView(e, refreshPorts);
+
 			UpdateComputeOrder();
 		}
 
@@ -818,6 +1053,7 @@ namespace GraphProcessor
 				return ;
 
 			EditorUtility.SetDirty(graph);
+			AssetDatabase.SaveAssets();
 		}
 
 		public void ToggleView< T >() where T : PinnedElementView
@@ -913,6 +1149,29 @@ namespace GraphProcessor
 				yield return nodeMenuItem;
 
 			// TODO: add exposed properties to this list
+		}
+		
+		public RelayNodeView AddRelayNode(PortView inputPort, PortView outputPort, Vector2 position)
+		{
+			var relayNode = BaseNode.CreateFromType<RelayNode>(position);
+			var view      = AddNode(relayNode) as RelayNodeView;
+
+			if (outputPort != null)
+				Connect(view.inputPortViews[0], outputPort);
+			if (inputPort != null)
+				Connect(inputPort, view.outputPortViews[0]);
+
+			return view;
+		}
+
+		/// <summary>
+		/// Call this function when you want to remove this view
+		/// </summary>
+		public void Dispose()
+		{
+			ClearGraphElements();
+			RemoveFromHierarchy();
+			Undo.undoRedoPerformed -= ReloadView;
 		}
 
 		#endregion

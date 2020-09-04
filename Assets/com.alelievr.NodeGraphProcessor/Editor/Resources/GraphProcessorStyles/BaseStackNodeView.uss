@@ -1,0 +1,12 @@
+.stack-node {
+    padding-top: 9px;
+    padding-bottom: 9px;
+}
+.stack-node #stackNodeContentContainer {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+.stack-node .stack-child-element {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}

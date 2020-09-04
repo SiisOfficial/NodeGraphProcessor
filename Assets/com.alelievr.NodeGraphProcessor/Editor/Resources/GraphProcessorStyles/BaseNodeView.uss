@@ -1,3 +1,36 @@
+.locked-node > #node-border {
+    border-bottom-color: rgb(148, 148, 148);
+    border-top-color: rgb(148, 148, 148);
+    border-left-color: rgb(148, 148, 148);
+    border-right-color: rgb(148, 148, 148);
+    border-bottom-width: 2px;
+    border-top-width: 2px;
+    border-left-width: 2px;
+    border-right-width: 2px;
+    margin-top: 0;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+}
+
+#infinite-loop-error {
+    background-color: #ff0000;
+    padding-right: 4px;
+    padding-left: 4px;
+    padding-bottom: 1px;
+}
+
+#infinite-loop-error > Label {
+    color: #ffffff;
+}
+
+.infinite-loop-error > #node-border {
+    border-bottom-color: #ff0000;
+    border-top-color: #ff0000;
+    border-left-color: #ff0000;
+    border-right-color: #ff0000;
+}
+
 #node {
     background-color: rgba(0, 63, 63, 0.8);
 }
@@ -15,24 +48,34 @@
 }
 
 #settings-button > #icon {
-    background-image: resource("Icons/SettingsIcons");
+    background-image: resource("Icons/SettingsIcon");
     flex-grow: 1;
+    opacity: 0.5;
 }
 
 #settings-button:hover > #icon {
-    background-color: #2B2B2B;
-    background-image: resource("Icons/SettingsIcons");
+    opacity: 0.8;
 }
 
 #settings-button.clicked > #icon {
-    background-color: #2B2B2B;
-    background-image: resource("Icons/SettingsIcons");
-    visibility: visible;
+    opacity: 1;
 }
 
 #title {
     height: 28px;
     background-color: #454545;
+}
+
+#title.debug-node {
+    background-color: #48342a;
+}
+
+#title.start-node {
+    background-color: #2a4845;
+}
+
+#title.physics-node {
+    background-color: #33482a;
 }
 
 #title > Label {
@@ -206,8 +249,24 @@ ParameterNodeView #controls EnumField > VisualElement > VisualElement {
     height: 6px;
 }
 
+#output .Port_List #connector,
+#input .Port_List #connector {
+    border-bottom-left-radius: 0;
+    border-top-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-top-right-radius: 0;
+}
+
+#output .Port_List #connector #cap,
+#input .Port_List #connector #cap {
+    border-bottom-left-radius: 0;
+    border-top-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-top-right-radius: 0;
+}
+
 .Highlight {
-    background-color: rgba(0, 63, 63, 0.8);
+    background-color: rgba(75, 210, 210, 0.8);
 }
 
 .executes.Port_ConditionalLink,
@@ -273,6 +332,10 @@ StartNodeView #output > .output > Label {
     --layer: -50;
 }
 
+.operator-node #input-container {
+    top: 5px;
+}
+
 .conditional-node #title > Label {
     flex-grow: 1;
 }
@@ -320,7 +383,7 @@ StartNodeView #output > .output > Label {
     max-width: 145px;
 }
 
-#input-container > .port-input-element > Vector3Field Label {
+#input-container > .port-input-element > Vector3Field Label, #input-container > .port-input-element > Vector2Field Label {
     font-size: 8px;
     min-width: 8px;
     flex-basis: 8px;
@@ -328,8 +391,12 @@ StartNodeView #output > .output > Label {
     margin-right: 1px;
 }
 
-#input-container > .port-input-element > Vector3Field FloatInput {
+#input-container > .port-input-element > Vector3Field FloatInput, #input-container > .port-input-element > Vector2Field FloatInput {
     min-width: 25px;
+}
+
+#input-container > .port-input-element > Vector2Field .unity-composite-field__field-spacer {
+    flex-grow: 0.01;
 }
 
 #input-container > .port-input-element > * {
@@ -354,8 +421,23 @@ StartNodeView #output > .output > Label {
     padding-right: 1px;
 }
 
+#input-container > .port-input-element > ColorField {
+    width: 60px;
+}
+
 #input-container > .port-input-element.empty {
     width: 0;
+}
+
+#input-container ObjectFieldSelector {
+    width: 14px;
+    height: 13px;
+    border-top-right-radius: 2px;
+    border-bottom-right-radius: 2px;
+}
+
+#input-container ObjectFieldDisplay > Image {
+    margin: 0;
 }
 
 #category {
@@ -370,4 +452,24 @@ StartNodeView #output > .output > Label {
     margin-top: -9px;
     font-size: 9px;
     color: #ffffff;
+}
+
+.compact-node #input-container {
+    display: none;
+}
+
+.compact-node #title {
+    height: 18px;
+}
+
+.compact-node #input, .compact-node #output {
+    height: 18px;
+}
+
+.compact-node.graphElement #node-border {
+    border-radius: 10px;
+}
+
+.compact-node.graphElement #selection-border {
+    border-radius: 12px;
 }

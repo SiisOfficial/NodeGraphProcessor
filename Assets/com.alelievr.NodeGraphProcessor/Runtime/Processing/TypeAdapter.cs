@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace GraphProcessor
@@ -16,16 +17,20 @@ namespace GraphProcessor
     /// }
     /// </code>
     /// </summary>
-    public interface ITypeAdapter {}
+    public abstract class ITypeAdapter // TODO: turn this back into an interface when we have C# 8
+    {
+        public virtual IEnumerable<(Type, Type)> GetIncompatibleTypes() { yield break; }
+    }
 
     public static class TypeAdapter
     {
-        static Dictionary< (Type from, Type to), Func<object, object> > adapters = new Dictionary< (Type, Type), Func<object, object> >();
-        static Dictionary< (Type from, Type to), MethodInfo > adapterMethods = new Dictionary< (Type, Type), MethodInfo >();
+        static Dictionary< (Type from, Type to), Func<object, object> > adapters          = new Dictionary< (Type, Type), Func<object, object> >();
+        static Dictionary< (Type from, Type to), MethodInfo >           adapterMethods    = new Dictionary< (Type, Type), MethodInfo >();
+        static List< (Type from, Type to)>                              incompatibleTypes = new List<( Type from, Type to) >();
 
         [System.NonSerialized]
         static bool adaptersLoaded = false;
-
+#if !ENABLE_IL2CPP
         static Func<object, object> ConvertTypeMethodHelper<TParam, TReturn>(MethodInfo method)
         {
             // Convert the slow MethodInfo into a fast, strongly typed, open delegate
@@ -36,6 +41,7 @@ namespace GraphProcessor
             Func<object, object> ret = (object param) => func((TParam)param);
             return ret;
         }
+#endif
 
         static void LoadAllAdapters()
         {
@@ -43,6 +49,19 @@ namespace GraphProcessor
             {
                 if (typeof(ITypeAdapter).IsAssignableFrom(type))
                 {
+                    if (type.IsAbstract)
+                        continue;
+
+                    var adapter = Activator.CreateInstance(type) as ITypeAdapter;
+                    if (adapter != null)
+                    {
+                        foreach (var types in adapter.GetIncompatibleTypes())
+                        {
+                            incompatibleTypes.Add((types.Item1, types.Item2));
+                            incompatibleTypes.Add((types.Item2, types.Item1));
+                        }
+                    }
+
                     foreach (var method in type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
                     {
                         if (method.GetParameters().Length != 1)
@@ -59,6 +78,11 @@ namespace GraphProcessor
                         Type to = method.ReturnType;
 
                         try {
+                            
+#if ENABLE_IL2CPP
+                            // IL2CPP doesn't suport calling generic functions via reflection (AOT can't generate templated code)
+                            Func<object, object> r = (object param) => { return (object)method.Invoke(null, new object[]{ param }); };
+#else
                             MethodInfo genericHelper = typeof(TypeAdapter).GetMethod("ConvertTypeMethodHelper", 
                                 BindingFlags.Static | BindingFlags.NonPublic);
                             
@@ -68,6 +92,7 @@ namespace GraphProcessor
                             object ret = constructedHelper.Invoke(null, new object[] {method});
 
                             var r = (Func<object, object>) ret;
+#endif
 
                             adapters.Add((method.GetParameters()[0].ParameterType, method.ReturnType), r);
                             adapterMethods.Add((method.GetParameters()[0].ParameterType, method.ReturnType), method);
@@ -88,13 +113,23 @@ namespace GraphProcessor
 
             adaptersLoaded = true;
         }
+        
+        public static bool AreIncompatible(Type from, Type to)
+        {
+            if (incompatibleTypes.Any((k) => k.from == from && k.to == to))
+                return true;
+            return false;
+        }
 
         public static bool AreAssignable(Type from, Type to)
         {
             if (!adaptersLoaded)
                 LoadAllAdapters();
+            
+            if (AreIncompatible(from, to))
+                return false;
 
-            if(from.Namespace == "System.Collections.Generic")
+            if(from.Namespace == "System.Collections.Generic" && !to.Name.StartsWith("List"))
             {
                 var split = from.ToString().Split('[');
                 var stringType = split[1].Substring(0, split[1].Length - 1);
@@ -109,7 +144,7 @@ namespace GraphProcessor
                 }
             }
             
-            if(to.Namespace == "System.Collections.Generic")
+            if(to.Namespace == "System.Collections.Generic" && !to.Name.StartsWith("List"))
             {
                 var split = to.ToString().Split('[');
                 var stringType = split[1].Substring(0, split[1].Length - 1);

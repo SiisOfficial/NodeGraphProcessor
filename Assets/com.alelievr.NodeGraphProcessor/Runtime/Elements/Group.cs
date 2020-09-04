@@ -13,6 +13,9 @@ namespace GraphProcessor
         public Vector2          size;
 
 		public List< string >	innerNodeGUIDs = new List< string >();
+		
+		// For serialization loading
+		public Group() {}
 
         public Group(string title, Vector2 position)
 		{

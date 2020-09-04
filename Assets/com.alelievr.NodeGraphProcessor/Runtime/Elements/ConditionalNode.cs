@@ -13,7 +13,7 @@ using System;
 public abstract class ConditionalNode : BaseNode, IConditionalNode
 {
 	// These booleans will controls wether or not the execution of the folowing nodes will be done or discarded.
-	[Input(name = "Executed", allowMultiple = true)]
+	[Input(name = "Executed", allowMultiple = false)]
     public ConditionalLink	executed;
 
 	public abstract IEnumerable< ConditionalNode >	GetExecutedNodes();

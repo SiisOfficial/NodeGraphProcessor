@@ -4,6 +4,63 @@
     -unity-background-scale-mode: scale-and-crop;
 }
 
+#graphRootView > .graphView {
+    overflow: visible;
+}
+
+#graphRootView > .graphView > VisualElement {
+    overflow: visible;
+    top: 21px;
+}
+
+#graphRootView > .graphView > .unity-imgui-container {
+    top: -21px;
+}
+
+/**
+    PROCESS ORDER VIEW STYLE
+ */
+
+ProcessOrderView {
+    min-width: 200px;
+}
+
+ProcessOrderView > .mainContainer, ProcessOrderView > .mainContainer > #content {
+    flex-grow: 1;
+}
+
+ProcessOrderView.pinnedElement > .mainContainer > #content > #contentContainer {
+    flex-grow: 1;
+    padding-top: 5px;
+}
+
+ProcessOrderView #contentContainer Label {
+    padding: 2px;
+    padding-left: 4px;
+    padding-right: 4px;
+    margin: 8px;
+    border-width: 1px;
+    border-color: #7a7a7a;
+    border-radius: 6px;
+    min-width: 180px;
+}
+
+ProcessOrderView #contentContainer Label.infinite-loop {
+    background-color: #ff0000;
+    color: #ffffff;
+    border-color: #ffffff;
+    -unity-font-style: bold;
+}
+
+ProcessOrderView #contentContainer Label.no-connection {
+    background-color: #674934;
+    -unity-font-style: bold;
+}
+
+/**
+    PROCESS ORDER VIEW STYLE
+ */
+
 /**
     EXPOSED PARAMETER STYLE
  */
@@ -11,10 +68,6 @@
 ExposedParameterView #contentContainer {
     padding-bottom: 12px;
     padding-top: 2px;
-}
-
-ExposedParameterView #titleLabel {
-    padding-left: 6px;
 }
 
 ExposedParameterView #header Button {

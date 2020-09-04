@@ -39,8 +39,7 @@ namespace GraphProcessor
 		public string	inputPortIdentifier;
 		public string	outputPortIdentifier;
 
-		//Private constructor so we can't instantiate this class
-		private SerializableEdge() {}
+		public SerializableEdge() {}
 
 		public static SerializableEdge CreateNewEdge(BaseGraph graph, NodePort inputPort, NodePort outputPort)
 		{
@@ -83,6 +82,6 @@ namespace GraphProcessor
 			outputPort = outputNode.GetPort(outputFieldName, outputPortIdentifier);
 		}
 		
-		public override string ToString() => $"{inputNode.name}:{inputPort.fieldName} -> {outputNode.name}:{outputPort.fieldName}";
+		public override string ToString() => $"{outputNode.name}:{outputPort.fieldName} -> {inputNode.name}:{inputPort.fieldName}";
 	}
 }

@@ -56,7 +56,7 @@ namespace GraphProcessor
             // filter the slot types because we don't want generic types (i.e lists)
             foreach (var type in NodeProvider.GetSlotTypes())
             {
-                if (type.IsGenericType)
+                if (type.IsGenericType || type.FullName == "ConditionalLink" || type.FullName == "RelayNode+PackedRelayData" || type.FullName == "GraphProcessor.BaseGraph")
                     continue ;
 
                 yield return type;

@@ -147,6 +147,7 @@ namespace GraphProcessor
 			{
 				//objField.objectType = t;
 				objField.allowSceneObjects = false;
+				objField.objectType        = typeof(UnityEngine.Object);
 			}
 			
 			return field as VisualElement;
@@ -188,8 +189,11 @@ namespace GraphProcessor
 			if(fieldType.IsSubclassOf(typeof(UnityEngine.Object)) && supportedObjectFields.Contains(fieldType))
 			{
 				var createObjectFieldSpecificMethod = createObjectFieldMethod.MakeGenericMethod(fieldType);
+				var objectField = createObjectFieldSpecificMethod.Invoke(null, new object[] {value, onValueChanged, label}) as ObjectField;
 
-				return createObjectFieldSpecificMethod.Invoke(null, new object[]{value, onValueChanged, label}) as VisualElement;
+				objectField.objectType = fieldType;
+
+				return objectField;
 			}
 
 			// var createFieldSpecificMethod = createFieldMethod.MakeGenericMethod(fieldType);
@@ -200,15 +204,21 @@ namespace GraphProcessor
 			try
 			{
 				var createFieldSpecificMethod = createFieldMethod.MakeGenericMethod(fieldType);
-				field = createFieldSpecificMethod.Invoke(null, new object[]{value, onValueChanged, label}) as VisualElement;
-
+				try
+				{
+					field = createFieldSpecificMethod.Invoke(null, new object[]{value, onValueChanged, label}) as VisualElement;
+				} catch {}
+				
 				// handle the Object field case
-				if (field == null)
+				if (field == null && (value == null || value is UnityEngine.Object))
 				{
 					createFieldSpecificMethod = createFieldMethod.MakeGenericMethod(typeof(UnityEngine.Object));
 					field                     = createFieldSpecificMethod.Invoke(null, new object[]{value, onValueChanged, label}) as VisualElement;
-					if (field is ObjectField objField)
+					if(field is ObjectField objField)
+					{
 						objField.objectType = fieldType;
+						objField.value      = value as UnityEngine.Object;
+					}
 				}
 			}
 			catch (Exception e)

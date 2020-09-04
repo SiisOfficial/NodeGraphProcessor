@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 
 namespace GraphProcessor
 {
-	public delegate void CustomPortIODelegate(BaseNode node, List< SerializableEdge > edges);
+	public delegate void CustomPortIODelegate(BaseNode node, List< SerializableEdge > edges, NodePort outputPort = null);
 
 	public static class CustomPortIO
 	{
@@ -36,18 +36,47 @@ namespace GraphProcessor
 
 				foreach (var method in methods)
 				{
-					var portInputAttr = method.GetCustomAttribute< CustomPortInputAttribute >();
+					var portInputAttr  = method.GetCustomAttribute< CustomPortInputAttribute >();
 					var portOutputAttr = method.GetCustomAttribute< CustomPortOutputAttribute >();
 
 					if (portInputAttr == null && portOutputAttr == null)
 						continue ;
 
+					var  p                 = method.GetParameters();
+					// Check if the function can take a NodePort in optional param
+					bool nodePortSignature = p.Length == 2 && p[1].ParameterType == typeof(NodePort);
+
+
+					CustomPortIODelegate deleg;
+#if ENABLE_IL2CPP
+					// IL2CPP doesn't support expression builders
+					if (nodePortSignature)
+					{
+						deleg = new CustomPortIODelegate((node, edges, port) => {
+							Debug.Log(port);
+							method.Invoke(node, new object[]{ edges, port});
+						});
+					}
+					else
+					{
+						deleg = new CustomPortIODelegate((node, edges, port) => {
+							method.Invoke(node, new object[]{ edges });
+						});
+					}
+#else
+
 					var p1 = Expression.Parameter(typeof(BaseNode), "node");
 					var p2 = Expression.Parameter(typeof(List< SerializableEdge >), "edges");
+					var p3 = Expression.Parameter(typeof(NodePort), "port");
 
-					var ex = Expression.Call(Expression.Convert(p1, type), method, p2);
+					MethodCallExpression ex;
+					if (nodePortSignature)
+						ex = Expression.Call(Expression.Convert(p1, type), method, p2, p3);
+					else
+						ex = Expression.Call(Expression.Convert(p1, type), method, p2);
 
-					var deleg = Expression.Lambda< CustomPortIODelegate >(ex, p1, p2).Compile();
+					deleg = Expression.Lambda< CustomPortIODelegate >(ex, p1, p2, p3).Compile();
+#endif
 
 					if (deleg == null)
 					{
@@ -55,9 +84,9 @@ namespace GraphProcessor
 						continue ;
 					}
 
-					string fieldName = (portInputAttr == null) ? portOutputAttr.fieldName : portInputAttr.fieldName;
-					Type customType = (portInputAttr == null) ? portOutputAttr.outputType : portInputAttr.inputType;
-					Type fieldType = type.GetField(fieldName, bindingFlags).FieldType;
+					string fieldName  = (portInputAttr == null) ? portOutputAttr.fieldName : portInputAttr.fieldName;
+					Type   customType = (portInputAttr == null) ? portOutputAttr.outputType : portInputAttr.inputType;
+					Type   fieldType  = type.GetField(fieldName, bindingFlags).FieldType;
 
 					AddCustomIOMethod(type, fieldName, deleg);
 

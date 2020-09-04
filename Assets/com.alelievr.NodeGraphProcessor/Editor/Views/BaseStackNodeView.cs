@@ -43,7 +43,7 @@ namespace GraphProcessor
 
             InitializeInnerNodes();
         }
-
+        
         void InitializeInnerNodes()
         {
             // Sanitize the GUID list in case some nodes were removed
@@ -60,6 +60,12 @@ namespace GraphProcessor
                     return true; // remove the entry as the GUID doesn't exist anymore
                 }
             });
+        }
+
+        public void RemoveAllChildsFromThisStack()
+        {
+            stackNode.nodeGUIDs = new List<string>();
+            InitializeInnerNodes();
         }
 
         /// <inheritdoc />
