@@ -3,18 +3,9 @@
     background-image: resource("Images/grid_big");
     -unity-background-scale-mode: scale-and-crop;
 }
-
 #graphRootView > .graphView {
-    overflow: visible;
-}
-
-#graphRootView > .graphView > VisualElement {
-    overflow: visible;
-    top: 21px;
-}
-
-#graphRootView > .graphView > .unity-imgui-container {
-    top: -21px;
+    flex-grow: 1;
+    position: relative;
 }
 
 /**

@@ -19,6 +19,11 @@ namespace GraphProcessor
 
 		protected override void Initialize(BaseGraphView baseGraphView)
 		{
+			if(pinnedElement.position.x == 5 && pinnedElement.position.y == 5)
+			{
+				pinnedElement.position = new Rect(new Vector2(5, 410), PinnedElement.defaultSize);
+			}
+
 			graphView                         =  baseGraphView;
 			graph                             =  graphView.graph;
 			baseGraphView.computeOrderUpdated += UpdateOrderList;

@@ -105,6 +105,10 @@ ParameterNodeView #title {
     background-color: #363636;
 }
 
+ParameterNodeView.Highlight {
+    border-radius: 12px;
+}
+
 ParameterNodeView #title.input {
     flex-direction: row-reverse;
 }
@@ -266,7 +270,8 @@ ParameterNodeView #controls EnumField > VisualElement > VisualElement {
 }
 
 .Highlight {
-    background-color: rgba(75, 210, 210, 0.8);
+    background-color: rgba(75, 210, 210, 1);
+    border-radius: 10px;
 }
 
 .executes.Port_ConditionalLink,
@@ -470,6 +475,7 @@ StartNodeView #output > .output > Label {
     border-radius: 10px;
 }
 
-.compact-node.graphElement #selection-border {
+.compact-node.graphElement #selection-border,
+.compact-node.Highlight {
     border-radius: 12px;
 }

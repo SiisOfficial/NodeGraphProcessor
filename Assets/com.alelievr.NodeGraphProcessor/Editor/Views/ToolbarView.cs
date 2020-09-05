@@ -44,7 +44,19 @@ namespace GraphProcessor
 				AddButtons();
 			};
 
-			graphView.Add(new IMGUIContainer(DrawImGUIToolbar));
+			/*
+			 TODO: UIElements Toolbar. This is an example
+			 var tln = new Toolbar();
+			var asdf = new ToolbarButton(
+				() => Debug.Log("heey?")
+			);
+			asdf.text = "heeeey";
+			tln.Add(asdf);
+			tln.pickingMode = PickingMode.Position;
+			graphView.editorWindow.rootVisualElement.Add(tln);
+			tln.BringToFront();*/
+
+			graphView.editorWindow.rootVisualElement.Add(new IMGUIContainer(DrawImGUIToolbar));
 		}
 
 		protected ToolbarButtonData AddButton(string name, Action callback, bool left = true)

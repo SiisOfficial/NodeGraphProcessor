@@ -62,15 +62,19 @@ namespace GraphProcessor
 		/// </summary>
 		public event NodeDuplicatedDelegate nodeDuplicated;
 
+		private Vector2      mousePosition;
+		public EditorWindow editorWindow;
+
 
 		public BaseGraphView(EditorWindow window)
 		{
 			serializeGraphElements = SerializeGraphElementsCallback;
 			canPasteSerializedData = CanPasteSerializedDataCallback;
-			unserializeAndPaste = UnserializeAndPasteCallback;
-            graphViewChanged = GraphViewChangedCallback;
-			viewTransformChanged = ViewTransformChangedCallback;
-            elementResized = ElementResizedCallback;
+			unserializeAndPaste    = UnserializeAndPasteCallback;
+            graphViewChanged       = GraphViewChangedCallback;
+			viewTransformChanged   = ViewTransformChangedCallback;
+            elementResized         = ElementResizedCallback;
+			editorWindow           = window;
 
 			InitializeManipulators();
 
@@ -78,17 +82,23 @@ namespace GraphProcessor
 			RegisterCallback< DragPerformEvent >(DragPerformedCallback);
 			RegisterCallback< DragUpdatedEvent >(DragUpdatedCallback);
 			RegisterCallback< MouseDownEvent >(MouseDownCallback);
+			RegisterCallback< MouseMoveEvent >(MouseMoveCallback);
 
 			InitializeManipulators();
 
-			SetupZoom(0.3f, 1.8f);
+			SetupZoom(0.25f, 2f);
 
 			Undo.undoRedoPerformed += ReloadView;
 
 			createNodeMenu = ScriptableObject.CreateInstance< CreateNodeMenuWindow >();
-			createNodeMenu.Initialize(this, window);
+			createNodeMenu.Initialize(this, editorWindow);
 
 			this.StretchToParentSize();
+		}
+
+		private void MouseMoveCallback(MouseMoveEvent evt)
+		{
+			mousePosition = new Vector2(editorWindow.position.x, editorWindow.position.y) + evt.originalMousePosition;
 		}
 
 		#region Callbacks
@@ -679,7 +689,7 @@ namespace GraphProcessor
 			graph.onGraphChanges += GraphChangesCallback;
 			viewTransform.position = graph.position;
 			viewTransform.scale = graph.scale;
-			nodeCreationRequest = (c) => SearchWindow.Open(new SearchWindowContext(c.screenMousePosition), createNodeMenu);
+			nodeCreationRequest = c=> SearchWindow.Open(new SearchWindowContext(mousePosition), createNodeMenu);
 		}
 
 		void InitializeNodeViews()
