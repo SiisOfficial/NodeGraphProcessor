@@ -118,8 +118,18 @@ public class RelayNode : BaseNode
 	[CustomPortBehavior(nameof(output))]
 	IEnumerable< PortData > OutputPortBehavior(List< SerializableEdge > edges)
 	{
-		if (inputPorts.Count == 0)
+		if(inputPorts.Count == 0)
+		{
+			// Default dummy port to avoid having a relay without any output:
+			yield return new PortData
+			{
+				displayName         = "",
+				displayType         = typeof(object),
+				identifier          = "0",
+				acceptMultipleEdges = true,
+			};
 			yield break;
+		}
 
 		var inputPortEdges = inputPorts[0].GetEdges();
 		var underlyingPortData = GetUnderlyingPortDataList();

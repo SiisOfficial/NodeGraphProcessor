@@ -479,3 +479,21 @@ StartNodeView #output > .output > Label {
 .compact-node.Highlight {
     border-radius: 12px;
 }
+
+.zoom-out .node #title > Label#title-label {
+    font-size: 20px;
+    margin: 0;
+    margin-right: -20px;
+    padding: 0;
+    color: white;
+}
+
+.zoom-out ParameterNodeView.node #title > Label#title-label {
+    font-size: 12px;
+    margin: 6px;
+    margin-left: 2px;
+    margin-right: 0;
+    padding-left: 2px;
+    padding-right: 2px;
+    
+}

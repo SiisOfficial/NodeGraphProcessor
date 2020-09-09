@@ -151,7 +151,8 @@ namespace GraphProcessor
 			// if (nodeTarget.debug)
 			// 	mainContainer.Add(debugContainer);
 
-			title = (string.IsNullOrEmpty(nodeTarget.name)) ? nodeTarget.GetType().Name : nodeTarget.name;
+			title                  = (string.IsNullOrEmpty(nodeTarget.name)) ? nodeTarget.GetType().Name : nodeTarget.name;
+			titleContainer.tooltip = title;
 
 			if(!string.IsNullOrEmpty(nodeTarget.category))
 			{
@@ -714,7 +715,8 @@ namespace GraphProcessor
 		{
 			foreach(var inputField in fieldControlsMap[field])
 			{
-				(inputField as INotifyValueChanged<T>)?.SetValueWithoutNotify((T) newValue);
+				if (inputField is INotifyValueChanged<T> notify)
+					notify.SetValueWithoutNotify((T)newValue);
 			}
 		}
 
@@ -726,6 +728,30 @@ namespace GraphProcessor
 			var genericUpdate = specificUpdateOtherFieldValue.MakeGenericMethod(fieldType);
 
 			genericUpdate.Invoke(this, new object[]{info, newValue});
+		}
+		
+		object GetInputFieldValueSpecific<T>(FieldInfo field)
+		{
+			if (fieldControlsMap.TryGetValue(field, out var list))
+			{
+				foreach (var inputField in list)
+				{
+					if (inputField is INotifyValueChanged<T> notify)
+						return notify.value;
+				}
+			}
+			return null;
+		}
+
+		static MethodInfo specificGetValue = typeof(BaseNodeView).GetMethod(nameof(GetInputFieldValueSpecific), BindingFlags.NonPublic | BindingFlags.Instance);
+		
+		object GetInputFieldValue(FieldInfo info)
+		{
+			// Warning: Keep in sync with FieldFactory CreateField
+			var fieldType     = info.FieldType.IsSubclassOf(typeof(UnityEngine.Object)) ? typeof(UnityEngine.Object) : info.FieldType;
+			var genericUpdate = specificGetValue.MakeGenericMethod(fieldType);
+
+			return genericUpdate.Invoke(this, new object[]{info});
 		}
 		
 		protected VisualElement AddControlField(string fieldName, string label = null, bool isSerializedInput = false, Action valueChangedCallback = null)
@@ -824,7 +850,19 @@ namespace GraphProcessor
 		internal void OnPortDisconnected(PortView port)
 		{
 			if(port.direction == Direction.Input && inputContainerElement?.Q(port.fieldName) != null)
+			{
 				inputContainerElement.Q(port.fieldName).RemoveFromClassList("empty");
+
+				if (nodeTarget.nodeFields.TryGetValue(port.fieldName, out var fieldInfo))
+				{
+					var valueBeforeConnection = GetInputFieldValue(fieldInfo.info);
+
+					if (valueBeforeConnection != null)
+					{
+						fieldInfo.info.SetValue(nodeTarget, valueBeforeConnection);
+					}
+				}
+			}
 
 			onPortDisconnected?.Invoke(port);
 		}

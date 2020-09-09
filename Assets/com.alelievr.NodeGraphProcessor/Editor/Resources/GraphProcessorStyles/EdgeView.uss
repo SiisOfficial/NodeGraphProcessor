@@ -10,7 +10,15 @@
 	--edge-width: 4;
 }
 
-/* Workaround to dynamically change edge size as we can't do it in C# :( */
+.zoom-out .edge {
+	--edge-width: 4;
+}
+
+.zoom-out .edge:hover {
+	--edge-width: 6;
+}
+
+	/* Workaround to dynamically change edge size as we can't do it in C# :( */
 .edge_1 { --edge-width: 1; } .edge_1:hover { --edge-width: 3; }
 .edge_2 { --edge-width: 2; } .edge_2:hover { --edge-width: 4; }
 .edge_3 { --edge-width: 3; } .edge_3:hover { --edge-width: 5; }

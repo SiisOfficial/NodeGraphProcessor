@@ -83,6 +83,7 @@ namespace GraphProcessor
 			RegisterCallback< DragUpdatedEvent >(DragUpdatedCallback);
 			RegisterCallback< MouseDownEvent >(MouseDownCallback);
 			RegisterCallback< MouseMoveEvent >(MouseMoveCallback);
+			RegisterCallback<WheelEvent>(ZoomCallback);
 
 			InitializeManipulators();
 
@@ -94,6 +95,26 @@ namespace GraphProcessor
 			createNodeMenu.Initialize(this, editorWindow);
 
 			this.StretchToParentSize();
+			initialized += () => ZoomCallback(new WheelEvent());
+		}
+
+		private void ZoomCallback(WheelEvent evt)
+		{
+			if(scale <= 0.6f)
+			{
+				RemoveFromClassList("zoom-in");
+				AddToClassList("zoom-out");
+			} 
+			else if(scale >= 1.5f)
+			{
+				RemoveFromClassList("zoom-out");
+				AddToClassList("zoom-in");
+			}
+			else
+			{
+				RemoveFromClassList("zoom-out");
+				RemoveFromClassList("zoom-in");
+			}
 		}
 
 		private void MouseMoveCallback(MouseMoveEvent evt)
@@ -361,7 +382,7 @@ namespace GraphProcessor
 		protected virtual void BuildGroupContextualMenu(ContextualMenuPopulateEvent evt)
 		{
 			Vector2 position = (evt.currentTarget as VisualElement).ChangeCoordinatesTo(contentViewContainer, evt.localMousePosition);
-			//evt.menu.AppendAction("New Group", (e) => AddSelectionsToGroup(AddGroup(new Group("New Group", position))), DropdownMenuAction.AlwaysEnabled);
+			evt.menu.AppendAction("New Group", (e) => AddSelectionsToGroup(AddGroup(new Group("New Group", position))), DropdownMenuAction.AlwaysEnabled);
 		}
 
 		protected void BuildViewContextualMenu(ContextualMenuPopulateEvent evt)
@@ -476,28 +497,28 @@ namespace GraphProcessor
 			} 
 			else if(selection.Count > 0 && e.keyCode == KeyCode.G)
 			{
-				// var position = new Vector2(100000,100000);
-				// var selectedNodeGUIDs = new List<string>();
-				// for(var i = 0; i < selection.Count; i++)
-				// {
-				// 	if(!(selection[i] is BaseNodeView)) continue;
-				// 	
-				// 	var selected = selection[i] as BaseNodeView;
-				// 	
-				// 	if(selected == null) continue;
-				// 	
-				// 	var nodeRect                           = selected.GetPosition();
-				// 	if(nodeRect.x < position.x) position.x = nodeRect.x;
-				// 	if(nodeRect.y < position.y) position.y = nodeRect.y;
-				// 	
-				// 	selectedNodeGUIDs.Add(selected.nodeTarget.GUID);
-				// }
-				// position -= new Vector2(9f,42f);	//	Estimated position
-				// var newGroup     = new Group("New Group", position) {innerNodeGUIDs = selectedNodeGUIDs};
-				// AddGroup(newGroup);
-				//	TODO: Uncomment this when groups are stable.
-				// AddSelectionsToGroup(AddGroup(new Group("New Group", new Vector2(0,0))));
-				// e.StopPropagation();
+				 // var position = new Vector2(100000,100000);
+				 // var selectedNodeGUIDs = new List<string>();
+				 // for(var i = 0; i < selection.Count; i++)
+				 // {
+				 // 	if(!(selection[i] is BaseNodeView)) continue;
+				 // 	
+				 // 	var selected = selection[i] as BaseNodeView;
+				 // 	
+				 // 	if(selected == null) continue;
+				 // 	
+				 // 	var nodeRect                           = selected.GetPosition();
+				 // 	if(nodeRect.x < position.x) position.x = nodeRect.x;
+				 // 	if(nodeRect.y < position.y) position.y = nodeRect.y;
+				 // 	
+				 // 	selectedNodeGUIDs.Add(selected.nodeTarget.GUID);
+				 // }
+				 // position -= new Vector2(9f,42f);	//	Estimated position
+				 // var newGroup     = new Group("New Group", position) {innerNodeGUIDs = selectedNodeGUIDs};
+				 // AddGroup(newGroup);
+					// TODO: Uncomment this when groups are stable.
+				 AddSelectionsToGroup(AddGroup(new Group("New Group", new Vector2(0,0))));
+				 e.StopPropagation();
 			}
 			else if(selection.Count > 0 && e.keyCode == KeyCode.S)
 			{
@@ -668,9 +689,9 @@ namespace GraphProcessor
 		
 		public void ClearGraphElements()
 		{
+			RemoveGroups();
 			RemoveNodeViews();
 			RemoveEdges();
-			RemoveGroups();
 			RemoveStackNodeViews();
 			RemovePinnedElementViews();
 		}

@@ -84,21 +84,22 @@ namespace GraphProcessor
             base.OnElementsAdded(elements);
 		}
 
-		// protected override void OnElementsRemoved(IEnumerable<GraphElement> elements)
-		// {
-		// 	foreach (var element in elements)
-		// 	{
-		// 		var node = element as BaseNodeView;
-		//
-		// 		// Adding an element that is not a node currently supported
-		// 		if (node == null)
-		// 			continue;
-		//
-		// 		if (group.innerNodeGUIDs.Contains(node.nodeTarget.GUID))
-		// 			group.innerNodeGUIDs.Remove(node.nodeTarget.GUID);
-		// 	}
-		// 	base.OnElementsRemoved(elements);
-		// }
+		protected override void OnElementsRemoved(IEnumerable<GraphElement> elements)
+		{
+			// Only remove the nodes when the group exists in the hierarchy
+			if(parent != null)
+			{
+				foreach(var elem in elements)
+				{
+					if(elem is BaseNodeView nodeView)
+					{
+						group.innerNodeGUIDs.Remove(nodeView.nodeTarget.GUID);
+					}
+				}
+			}
+
+			base.OnElementsRemoved(elements);
+		}
 
 		public void RemoveElementsFromThisGroup()
 		{
