@@ -19,7 +19,7 @@ NodeSettingsView Label#header {
 }
 
 NodeSettingsView Label.unity-text-element {
-    min-width: 50px;
+    min-width: 110px;
     font-size: 10px;
     padding-right: 6px;
 }
