@@ -26,7 +26,7 @@ namespace GraphProcessor
 			(this.Q("textField") as TextField).RegisterValueChangedCallback((e) => {
 				param.name = e.newValue;
 				text = e.newValue;
-				if(param.name == "inputVector3" || param.name == "inputVector2" || param.name == "inputFloat" || param.name == "inputInteger")
+				if(param.name == "inputVector3" || param.name == "inputVector2" || param.name == "inputFloat" || param.name == "inputInteger" || param.name == "inputGameObject")
 				{
 					param.settings.isHidden = true;
 				}

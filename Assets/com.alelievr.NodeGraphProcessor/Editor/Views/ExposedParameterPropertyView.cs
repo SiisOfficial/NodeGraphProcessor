@@ -92,7 +92,7 @@ namespace GraphProcessor
 		{
 			if(obj != parameter.name) return;
 			parameter.settings.isHidden = parameter.name == "inputVector3" || parameter.name == "inputVector2" || parameter.name == "inputFloat" ||
-										  parameter.name == "inputInteger";
+										  parameter.name == "inputInteger" || parameter.name == "inputGameObject";
 
 			if(parameter.settings.isHidden)
 			{

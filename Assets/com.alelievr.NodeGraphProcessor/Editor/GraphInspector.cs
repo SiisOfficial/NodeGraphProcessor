@@ -63,7 +63,7 @@ namespace GraphProcessor
 				if(param.settings.isHidden)
 				{
 					hasHidden = true;
-					if(param.name == "inputVector3" || param.name == "inputVector2" || param.name == "inputFloat" || param.name == "inputInteger")
+					if(param.name == "inputVector3" || param.name == "inputVector2" || param.name == "inputFloat" || param.name == "inputInteger" || param.name == "inputGameObject")
 						hasDynamic = true;
 
 					continue;
@@ -82,7 +82,7 @@ namespace GraphProcessor
 			foreach(var param in graph.exposedParameters)
 			{
 				if(!param.settings.isHidden || param.name == "inputVector3" || param.name == "inputVector2" || param.name == "inputFloat" ||
-				   param.name == "inputInteger") continue;
+				   param.name == "inputInteger" || param.name == "inputGameObject") continue;
 				DrawParameter(param, parameterContainer);
 			}
 
@@ -96,7 +96,7 @@ namespace GraphProcessor
 
 			foreach(var param in graph.exposedParameters)
 			{
-				if(param.name == "inputVector3" || param.name == "inputVector2" || param.name == "inputFloat" || param.name == "inputInteger")
+				if(param.name == "inputVector3" || param.name == "inputVector2" || param.name == "inputFloat" || param.name == "inputInteger" || param.name == "inputGameObject")
 					DrawDynamic(param.name, Type.GetType(param.type)?.Name, parameterContainer);
 			}
 		}
