@@ -75,9 +75,7 @@ namespace GraphProcessor
 			viewTransformChanged   = ViewTransformChangedCallback;
             elementResized         = ElementResizedCallback;
 			editorWindow           = window;
-
-			InitializeManipulators();
-
+			
 			RegisterCallback< KeyDownEvent >(KeyDownCallback);
 			RegisterCallback< DragPerformEvent >(DragPerformedCallback);
 			RegisterCallback< DragUpdatedEvent >(DragUpdatedCallback);
