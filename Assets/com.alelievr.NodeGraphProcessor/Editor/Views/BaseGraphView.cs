@@ -814,6 +814,7 @@ namespace GraphProcessor
 			RemoveElement(nodeView);
 			nodeViews.Remove(nodeView);
 			nodeViewsPerNode.Remove(nodeView.nodeTarget);
+			UpdateComputeOrder();
 		}
 
 		void RemoveNodeViews()

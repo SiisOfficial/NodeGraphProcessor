@@ -467,8 +467,31 @@ StartNodeView #output > .output > Label {
     height: 18px;
 }
 
-.compact-node #input, .compact-node #output {
+.compact-node #title Label {
+    margin-left: 3px;
+}
+
+.compact-node #input > PortView, .compact-node #output > PortView {
     height: 18px;
+}
+
+.compact-node #input > PortView {
+    padding-left: 1px;
+}
+
+.compact-node #output > PortView {
+    padding-right: 1px;
+}
+
+.compact-node #contents #top > #input, .compact-node #contents #top > #output {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.compact-node #contents #top #type {
+    margin-left: 0;
+    margin-right: 0;
+    font-size: 10px;
 }
 
 .compact-node.graphElement #node-border {
@@ -495,5 +518,5 @@ StartNodeView #output > .output > Label {
     margin-right: 0;
     padding-left: 2px;
     padding-right: 2px;
-    
+
 }
