@@ -638,7 +638,7 @@ namespace GraphProcessor
 			{
 				var isSerializedInput = false;
 				var isEmpty           = false;
-
+				
 				//skip if the field is a node setting
 				if(field.GetCustomAttribute(typeof(SettingAttribute)) != null)
 				{
@@ -761,7 +761,7 @@ namespace GraphProcessor
 		{
 			if (field == null)
 				return null;
-	
+			
 			var element = FieldFactory.CreateField(field.FieldType, field.GetValue(nodeTarget), (newValue) => {
 				owner.RegisterCompleteObjectUndo("Updated " + newValue);
 				field.SetValue(nodeTarget, newValue);

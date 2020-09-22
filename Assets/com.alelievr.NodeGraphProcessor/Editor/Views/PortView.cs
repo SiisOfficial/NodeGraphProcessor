@@ -62,7 +62,9 @@ namespace GraphProcessor
 				portLabel.pickingMode    = PickingMode.Position;
 				portLabel.style.flexGrow = 1;
 			}
-
+			
+			if(fieldInfo.GetCustomAttribute(typeof(TooltipAttribute)) != null)
+				pv.tooltip = ((TooltipAttribute) fieldInfo.GetCustomAttribute(typeof(TooltipAttribute))).tooltip;
 
 			return pv;
 		}

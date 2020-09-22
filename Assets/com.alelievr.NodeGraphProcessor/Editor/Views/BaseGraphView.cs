@@ -1172,7 +1172,7 @@ namespace GraphProcessor
 		
 		protected virtual void InitializeView() {}
 
-		public virtual IEnumerable< KeyValuePair< string, Type > > FilterCreateNodeMenuEntries()
+		public virtual IEnumerable< KeyValuePair< string, NodeProvider.NodeTypeIcon > > FilterCreateNodeMenuEntries()
 		{
 			// By default we don't filter anything
 			foreach (var nodeMenuItem in NodeProvider.GetNodeMenuEntries())

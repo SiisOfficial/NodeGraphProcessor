@@ -93,10 +93,10 @@ namespace GraphProcessor
                     }
                 }
 
-                tree.Add(new SearchTreeEntry(new GUIContent(nodeName, icon))
+                tree.Add(new SearchTreeEntry(new GUIContent(nodeName, EditorGUIUtility.FindTexture(nodeMenuItem.Value.nodeIcon)))
                 {
                     level    = level + 1,
-                    userData = nodeMenuItem.Value
+                    userData = nodeMenuItem.Value.nodeType
                 });
             }
         }
@@ -124,7 +124,7 @@ namespace GraphProcessor
 
 			foreach (var nodeMenuItem in entries.OrderBy(n => n.nodeType.ToString()))
 			{
-                var nodePath = nodePaths.FirstOrDefault(kp => kp.Value == nodeMenuItem.nodeType).Key;
+                var nodePath = nodePaths.FirstOrDefault(kp => kp.Value.nodeType == nodeMenuItem.nodeType).Key;
 
                 // Ignore the node if it's not in the create menu
                 if (String.IsNullOrEmpty(nodePath))

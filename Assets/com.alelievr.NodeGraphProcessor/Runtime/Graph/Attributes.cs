@@ -37,10 +37,12 @@ namespace GraphProcessor
 	public class NodeMenuItemAttribute : Attribute
 	{
 		public string	menuTitle;
+		public string	menuIcon;
 
-		public NodeMenuItemAttribute(string menuTitle = null)
+		public NodeMenuItemAttribute(string menuTitle = null, string menuIcon = "winbtn_win_max")
 		{
 			this.menuTitle = menuTitle;
+			this.menuIcon = menuIcon;
 		}
 	}
 

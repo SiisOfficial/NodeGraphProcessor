@@ -107,6 +107,7 @@ namespace GraphProcessor
             // ex: float to vector but no vector to float
             foreach (var kp in adapters)
             {
+                if(kp.Key.from == typeof(AudioSource) || kp.Key.from == typeof(MeshFilter)) continue;
                 if (!adapters.ContainsKey((kp.Key.to, kp.Key.from)))
                     Debug.LogError($"Missing convertion method. There is one for {kp.Key.from} to {kp.Key.to} but not for {kp.Key.to} to {kp.Key.from}");
             }

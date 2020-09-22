@@ -23,8 +23,14 @@ namespace GraphProcessor
 			public string portDisplayName;
 		}
 
+		public struct NodeTypeIcon
+		{
+			public Type   nodeType;
+			public string nodeIcon;
+		}
+
 		static Dictionary<Type, Type>       nodeViewPerType           = new Dictionary<Type, Type>();
-		static Dictionary<string, Type>     nodePerMenuTitle          = new Dictionary<string, Type>();
+		static Dictionary<string, NodeTypeIcon>     nodePerMenuTitle          = new Dictionary<string, NodeTypeIcon>();
 		static Dictionary<Type, MonoScript> nodeViewScripts           = new Dictionary<Type, MonoScript>();
 		static Dictionary<Type, MonoScript> nodeScripts               = new Dictionary<Type, MonoScript>();
 		static List<Type>                   slotTypes                 = new List<Type>();
@@ -87,8 +93,14 @@ namespace GraphProcessor
 
 			if(attrs != null && attrs.Length > 0)
 			{
-				foreach (var attr in attrs)
-					nodePerMenuTitle[attr.menuTitle] = type;
+				foreach(var attr in attrs)
+				{
+					nodePerMenuTitle[attr.menuTitle] = new NodeTypeIcon
+					{
+						nodeType = type,
+						nodeIcon = attr.menuIcon
+					};
+				}
 			}
 
 			var nodeScriptAsset = FindScriptFromClassName(type.Name);
@@ -159,7 +171,7 @@ namespace GraphProcessor
 			return view;
 		}
 
-		public static Dictionary<string, Type> GetNodeMenuEntries()
+		public static Dictionary<string, NodeTypeIcon> GetNodeMenuEntries()
 		{
 			return nodePerMenuTitle;
 		}
