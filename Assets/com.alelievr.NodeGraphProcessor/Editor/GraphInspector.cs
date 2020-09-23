@@ -2,6 +2,10 @@ using UnityEngine;
 using UnityEditor;
 using UnityEngine.UIElements;
 using System;
+using System.Collections.Generic;
+using UnityEditor.Animations;
+using UnityEngine.Audio;
+using UnityEngine.Playables;
 
 namespace GraphProcessor
 {
@@ -11,6 +15,30 @@ namespace GraphProcessor
 		protected BaseGraph     graph;
 
 		VisualElement parameterContainer;
+
+		readonly List<Type> supportedTypes = new List<Type>
+		{
+			typeof(string),
+			typeof(int),
+			typeof(float),
+			typeof(bool),
+			typeof(Vector2),
+			typeof(Vector3),
+			typeof(Vector4),
+			typeof(Color),
+			typeof(Material),
+			typeof(Sprite),
+			typeof(Texture),
+			typeof(AnimationCurve),
+			typeof(AudioClip),
+			typeof(AnimatorController),
+			typeof(AnimationClip),
+			typeof(PlayableAsset),
+			typeof(PlayState),
+			typeof(Mesh),
+			typeof(AudioMixer),
+			typeof(AudioMixerSnapshot),
+		};
 
 		protected virtual void OnEnable()
 		{
@@ -63,7 +91,8 @@ namespace GraphProcessor
 				if(param.settings.isHidden)
 				{
 					hasHidden = true;
-					if(param.name == "inputVector3" || param.name == "inputVector2" || param.name == "inputFloat" || param.name == "inputInteger" || param.name == "inputGameObject")
+					if(param.name == "inputVector3" || param.name == "inputVector2" || param.name == "inputFloat" || param.name == "inputInteger" ||
+					   param.name == "inputGameObject")
 						hasDynamic = true;
 
 					continue;
@@ -96,7 +125,8 @@ namespace GraphProcessor
 
 			foreach(var param in graph.exposedParameters)
 			{
-				if(param.name == "inputVector3" || param.name == "inputVector2" || param.name == "inputFloat" || param.name == "inputInteger" || param.name == "inputGameObject")
+				if(param.name == "inputVector3" || param.name == "inputVector2" || param.name == "inputFloat" || param.name == "inputInteger" ||
+				   param.name == "inputGameObject")
 					DrawDynamic(param.name, Type.GetType(param.type)?.Name, parameterContainer);
 			}
 		}
@@ -119,11 +149,7 @@ namespace GraphProcessor
 			prop.style.display = DisplayStyle.Flex;
 			Type paramType = Type.GetType(param.type);
 
-			if(paramType == typeof(Transform) || paramType == typeof(AudioSource) || paramType == typeof(Enum) || paramType == typeof(Component) ||
-			   paramType == typeof(BaseGraph) || paramType == typeof(Renderer) || paramType == typeof(SpriteRenderer) || paramType == typeof(Collider) ||
-			   paramType == typeof(Collider2D) || paramType == typeof(Rigidbody) || paramType == typeof(Rigidbody2D) || paramType == typeof(Animator) ||
-			   paramType == typeof(GameObject)
-			)
+			if(!supportedTypes.Contains(paramType))
 			{
 				var label = new Label {text = param.name + "     (" + paramType.Name + ")"};
 				label.style.marginLeft   = 3;

@@ -4,6 +4,9 @@
     "version": "0.8.0",
     "unity": "2020.1",
     "description": "Node graph editor framework focused on data processing using Unity UIElements and C# 4.7",
+  "dependencies": {
+    "com.unity.addressables": "1.8.5"
+  },
     "keywords": [
         "graph",
 		"UIElements",

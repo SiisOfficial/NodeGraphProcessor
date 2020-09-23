@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 using System.Globalization;
-
+using UnityEngine.AddressableAssets;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -50,6 +50,12 @@ namespace GraphProcessor
         public class SerializedColor : SerializedValueBase
         {
             public Color value;
+        }
+
+        [Serializable]
+        public class SerializedAsset : SerializedValueBase
+        {
+            public AssetReferenceGameObject value;
         }
         
         [SerializeReference] public SerializedValueBase serializedObjectValue;
@@ -111,6 +117,10 @@ namespace GraphProcessor
                     {
                         value = (serializedObjectValue as SerializedColor)?.value;
                     }
+                    else if(typeof(AssetReferenceGameObject).IsAssignableFrom(type))
+                    {
+                        value = (serializedObjectValue as SerializedAsset)?.value;
+                    }
                     else
                     {
                         value = Activator.CreateInstance(type);
@@ -157,6 +167,10 @@ namespace GraphProcessor
                     else if(value is Vector3)
                     {
                         serializedObjectValue = new SerializedVector3 { value = value as Vector3? ?? new Vector3()};
+                    }
+                    else if(value is AssetReferenceGameObject)
+                    {
+                        serializedObjectValue = new SerializedAsset { value = value as AssetReferenceGameObject};
                     }
                     else
                     {
