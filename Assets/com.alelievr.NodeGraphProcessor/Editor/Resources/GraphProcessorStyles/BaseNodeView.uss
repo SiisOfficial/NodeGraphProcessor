@@ -337,6 +337,11 @@ StartNodeView #output > .output > Label {
     --layer: -50;
 }
 
+.compact-node > #input-container {
+    top: 20px;
+    display: flex;
+}
+
 .operator-node #input-container {
     top: 5px;
 }
@@ -376,6 +381,17 @@ StartNodeView #output > .output > Label {
 #input-container > .port-input-element > CurveField {
     margin-top: 0;
     margin-bottom: 0;
+}
+
+.compact-node > #input-container > .port-input-element > ColorField,
+.compact-node > #input-container > .port-input-element > ObjectField,
+.compact-node > #input-container > .port-input-element > CurveField,
+.compact-node > #input-container > .port-input-element > IntegerField,
+.compact-node > #input-container > .port-input-element > FloatField,
+.compact-node > #input-container > .port-input-element > TextField {
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-right: 2px;
 }
 
 #input-container > .port-input-element > TextField {
@@ -426,6 +442,16 @@ StartNodeView #output > .output > Label {
     padding-right: 1px;
 }
 
+.compact-node > #input-container > .port-input-element {
+    height: 12px;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-bottom: 3px;
+    margin-top: 4px;
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+}
+
 #input-container > .port-input-element > ColorField {
     width: 60px;
 }
@@ -457,10 +483,6 @@ StartNodeView #output > .output > Label {
     margin-top: -9px;
     font-size: 9px;
     color: #ffffff;
-}
-
-.compact-node #input-container {
-    display: none;
 }
 
 .compact-node #title {
