@@ -70,6 +70,10 @@
     background-color: #48342a;
 }
 
+#title.wait-node {
+    background-color: #7a5e4b;
+}
+
 #title.start-node {
     background-color: #2a4845;
 }
@@ -82,6 +86,10 @@
     font-size: 11px;
     -unity-font-style: bold;
     flex-grow: 1;
+}
+
+#title.wait-node > Label {
+    color: #fff3da;
 }
 
 .graphElement #node-border {
