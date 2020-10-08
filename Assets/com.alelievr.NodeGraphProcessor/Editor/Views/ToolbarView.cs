@@ -27,7 +27,6 @@ namespace GraphProcessor
 		List< ToolbarButtonData >	rightButtonDatas = new List< ToolbarButtonData >();
 		protected BaseGraphView		graphView;
 
-		ToolbarButtonData showProcessor;
 		ToolbarButtonData showProcessOrder;
 		ToolbarButtonData showParameters;
 
@@ -96,9 +95,6 @@ namespace GraphProcessor
 		{
 			AddButton("Center", graphView.ResetPositionAndZoom);
 
-			bool processorVisible = graphView.GetPinnedElementStatus< ProcessorView >() != Status.Hidden;
-			showProcessor = AddToggle("Show Processor", processorVisible, (v) => graphView.ToggleView< ProcessorView>());
-
 			bool processOrderVisible = graphView.GetPinnedElementStatus< ProcessOrderView >() != Status.Hidden;
 			showProcessOrder = AddToggle("Show Process Order", processOrderVisible, (v) => graphView.ToggleView< ProcessOrderView>());
 			
@@ -110,8 +106,6 @@ namespace GraphProcessor
 		
 		public virtual void UpdateButtonStatus()
 		{
-			if (showProcessor != null)
-				showProcessor.value = graphView.GetPinnedElementStatus< ProcessorView >() != Status.Hidden;
 			if (showProcessOrder != null)
 				showProcessOrder.value = graphView.GetPinnedElementStatus< ProcessOrderView >() != Status.Hidden;
 			if (showParameters != null)
