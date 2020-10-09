@@ -542,7 +542,7 @@ namespace GraphProcessor
 				// AddStackNode(newStack);
 				// e.StopPropagation();
 			}
-			else if(nodeViews.Count > 0 && e.commandKey && e.altKey)
+			else if(nodeViews.Count > 0 && (e.commandKey || e.ctrlKey) && e.altKey)
 			{
 				//	Node Aligning shortcuts
 				switch(e.keyCode)

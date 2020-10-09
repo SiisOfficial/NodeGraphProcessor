@@ -4,7 +4,7 @@ using GraphProcessor;
 using UnityEngine;
 
 [Serializable, NodeMenuItem("Functions/Wait")]
-public class WaitNode : WaitableConditionalNode
+public class WaitNode : WaitableNode
 {
 	public override string name => "Wait";
 

@@ -55,7 +55,7 @@ public abstract class LinearConditionalNode : ConditionalNode, IConditionalNode
 /// <summary>
 /// This class represent a simple node which takes one event in parameter and pass it to the next node
 /// </summary>
-public abstract class WaitableConditionalNode : LinearConditionalNode
+public abstract class WaitableNode : LinearConditionalNode
 {
 	[NonSerialized]
 	public bool isFinished = false;
@@ -68,7 +68,7 @@ public abstract class WaitableConditionalNode : LinearConditionalNode
 		return null;
 	}
 
-	public Action<WaitableConditionalNode> onProcessFinished;
+	public Action<WaitableNode> onProcessFinished;
 
 	public IEnumerable< ConditionalNode >	GetExecuteAfterNodes()
 	{
