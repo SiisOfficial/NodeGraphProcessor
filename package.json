@@ -1,0 +1,16 @@
+{
+  "name": "com.siis.node-graph-processor",
+  "displayName": "Siis Node Graph Processor",
+  "version": "0.9.9",
+  "unity": "2020.1",
+  "description": "Node graph editor framework focused on data processing using Unity UIElements and C# 4.7 to work with OKKU. This is a highly edited fork from https://github.com/alelievr/NodeGraphProcessor.",
+  "dependencies": {
+    "com.unity.addressables": "1.16.1"
+  },
+  "keywords": [
+    "graph",
+    "UIElements",
+    "unity"
+  ],
+  "category": "Unity"
+}
