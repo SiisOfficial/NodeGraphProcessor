@@ -81,6 +81,8 @@ namespace GraphProcessor
 				graph.position = new Vector3(-selectedNode.position.x + graphView.viewport.contentRect.width / 2f - selectedNode.position.width / 2f,
 											 -selectedNode.position.y + graphView.viewport.contentRect.height / 2f - selectedNode.position.height / 2f, 0f);
 				graph.scale = Vector3.one;
+				graphView.RemoveFromClassList("zoom-out");
+				graphView.RemoveFromClassList("zoom-in");
 
 				graphView.UpdateViewTransform(graph.position, graph.scale);
 			};

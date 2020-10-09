@@ -181,6 +181,12 @@ namespace GraphProcessor
 				node.OnNodeCreated();
 				//And move a bit the new node
 				node.position.position += new Vector2(20, 20);
+				var graphCenterPos = -new Vector2(
+										 graph.position.x / scale - editorWindow.position.width / (2f * scale),
+										 graph.position.y / scale - editorWindow.position.height / (2f * scale));
+				
+				if(Vector2.Distance(graphCenterPos, node.position.position) > editorWindow.position.size.magnitude/(2.6f*scale))
+					node.position.position = graphCenterPos;
 
 				var newNodeView = AddNode(node);
 
@@ -1161,6 +1167,9 @@ namespace GraphProcessor
 		{
 			graph.position = Vector3.zero;
 			graph.scale = Vector3.one;
+			
+			RemoveFromClassList("zoom-out");
+			RemoveFromClassList("zoom-in");
 
 			UpdateViewTransform(graph.position, graph.scale);
 		}
