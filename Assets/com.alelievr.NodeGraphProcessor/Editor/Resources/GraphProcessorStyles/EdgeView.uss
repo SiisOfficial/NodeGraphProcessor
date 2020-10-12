@@ -15,7 +15,24 @@
 }
 
 .zoom-out .edge:hover {
-	--edge-width: 6;
+    --edge-width: 6;
+}
+
+.conditional-link.edge {
+    --edge-width: 3;
+	--layer:-9;
+}
+
+.conditional-link.edge:hover {
+    --edge-width: 5;
+}
+
+.zoom-out .conditional-link.edge {
+    --edge-width: 5;
+}
+
+.zoom-out .conditional-link.edge:hover {
+    --edge-width: 7;
 }
 
 	/* Workaround to dynamically change edge size as we can't do it in C# :( */

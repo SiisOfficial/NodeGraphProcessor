@@ -983,6 +983,9 @@ namespace GraphProcessor
 			
 			e.isConnected = true;
 
+			if(outputPortView.portType == typeof(ConditionalLink))
+				e.AddToClassList("conditional-link");
+			
 			return true;
 		}
 		
@@ -1024,7 +1027,7 @@ namespace GraphProcessor
 			ConnectView(e, autoDisconnectInputs);
 
 			UpdateComputeOrder();
-
+			
 			return true;
 		}
 
