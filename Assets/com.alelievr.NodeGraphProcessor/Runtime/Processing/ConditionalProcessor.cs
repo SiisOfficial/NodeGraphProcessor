@@ -44,8 +44,20 @@ public class ConditionalProcessor : BaseGraphProcessor
 
 	public override void Run()
 	{
-		// Execute the whole graph:
-		var enumerator = RunConditionalGraph();
+		IEnumerator<BaseNode> enumerator;
+
+		if(startNodeList.Count == 0)
+		{
+			enumerator = RunGraph();
+		}
+		else
+		{
+			Stack<BaseNode> nodeToExecute = new Stack<BaseNode>();
+			// Add all the start nodes to the execution stack
+			startNodeList.ForEach(s => nodeToExecute.Push(s));
+			// Execute the whole graph:
+			enumerator = RunGraph(nodeToExecute);
+		}
 
 		while(enumerator.MoveNext())
 			;
@@ -53,8 +65,8 @@ public class ConditionalProcessor : BaseGraphProcessor
 
 	public void WaitedRun(Stack<BaseNode> nodesToRun)
 	{
-		// Execute the whole graph:
-		var enumerator = RunWaitedGraph(nodesToRun);
+		// Execute the waitable node:
+		var enumerator = RunGraph(nodesToRun);
 
 		while(enumerator.MoveNext())
 			;
@@ -78,105 +90,18 @@ public class ConditionalProcessor : BaseGraphProcessor
 		}
 	}
 
-	public IEnumerator<BaseNode> RunConditionalGraph()
+	public IEnumerator<BaseNode> RunGraph()
 	{
-		if(startNodeList.Count == 0)
+		int count = processList.Count;
+
+		for(int i = 0; i < count; i++)
 		{
-			int count = processList.Count;
-
-			for(int i = 0; i < count; i++)
-			{
-				processList[i].OnProcess();
-				yield return processList[i];
-			}
-		}
-		else // Conditional graph execution:
-		{
-			Stack<BaseNode>   nodeToExecute            = new Stack<BaseNode>();
-			HashSet<BaseNode> nodeDependenciesGathered = new HashSet<BaseNode>();
-			HashSet<BaseNode> skipConditionalHandling  = new HashSet<BaseNode>();
-
-			// Add all the start nodes to the execution stack
-			startNodeList.ForEach(s => nodeToExecute.Push(s));
-
-			while(nodeToExecute.Count > 0)
-			{
-				var node = nodeToExecute.Pop();
-				// TODO: maxExecutionTimeMS
-
-				// In case the node is conditional, then we need to execute it's non-conditional dependencies first
-				if(node is IConditionalNode && !skipConditionalHandling.Contains(node))
-				{
-					// Gather non-conditional deps: TODO, move to the cache:
-					if(nodeDependenciesGathered.Contains(node))
-					{
-						// Execute the conditional node:
-						node.OnProcess();
-						yield return node;
-
-						// And select the next nodes to execute:
-						switch(node)
-						{
-							// special code path for the loop node as it will execute multiple times the same nodes
-							case ForLoopNode forLoopNode:
-								forLoopNode.index = forLoopNode.start - 1; // Initialize the start index
-								foreach(var n in forLoopNode.GetExecutedNodesLoopCompleted())
-									nodeToExecute.Push(n);
-								for(int i = forLoopNode.start; i < forLoopNode.end; i++)
-								{
-									foreach(var n in forLoopNode.GetExecutedNodesLoopBody())
-										nodeToExecute.Push(n);
-
-									nodeToExecute.Push(node); // Increment the counter
-								}
-
-								skipConditionalHandling.Add(node);
-								break;
-							// another special case for waitable nodes, like "wait for a coroutine", wait x seconds", etc.
-							case WaitableNode wNode:
-								foreach(var n in wNode.GetExecutedNodes())
-									nodeToExecute.Push(n);
-
-								wNode.onProcessFinished += (wnode) =>
-								{
-									Stack<BaseNode> waitedNodes = new Stack<BaseNode>();
-									foreach(var n in wnode.GetExecuteAfterNodes())
-										waitedNodes.Push(n);
-									WaitedRun(waitedNodes);
-								};
-								break;
-							case IConditionalNode cNode:
-								foreach(var n in cNode.GetExecutedNodes())
-									nodeToExecute.Push(n);
-								break;
-							default:
-								Debug.LogError($"Conditional node {node} not handled");
-								break;
-						}
-
-						nodeDependenciesGathered.Remove(node);
-					}
-					else
-					{
-						nodeToExecute.Push(node);
-						nodeDependenciesGathered.Add(node);
-						foreach(var nonConditionalNode in GatherNonConditionalDependencies(node))
-						{
-							nodeToExecute.Push(nonConditionalNode);
-						}
-					}
-				}
-				else
-				{
-					node.OnProcess();
-					yield return node;
-				}
-			}
+			processList[i].OnProcess();
+			yield return processList[i];
 		}
 	}
 
-
-	public IEnumerator<BaseNode> RunWaitedGraph(Stack<BaseNode> nodeToExecute)
+	public IEnumerator<BaseNode> RunGraph(Stack<BaseNode> nodeToExecute)
 	{
 		HashSet<BaseNode> nodeDependenciesGathered = new HashSet<BaseNode>();
 		HashSet<BaseNode> skipConditionalHandling  = new HashSet<BaseNode>();
@@ -261,7 +186,11 @@ public class ConditionalProcessor : BaseGraphProcessor
 	{
 		if(currentGraphExecution == null)
 		{
-			currentGraphExecution = RunConditionalGraph();
+			Stack<BaseNode> nodeToExecute = new Stack<BaseNode>();
+			if(startNodeList.Count > 0)
+				startNodeList.ForEach(s => nodeToExecute.Push(s));
+
+			currentGraphExecution = startNodeList.Count == 0 ? RunGraph() : RunGraph(nodeToExecute);
 			currentGraphExecution.MoveNext(); // Advance to the first node
 		}
 		else if(!currentGraphExecution.MoveNext())
