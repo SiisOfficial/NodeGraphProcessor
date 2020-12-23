@@ -63,9 +63,10 @@ public abstract class WaitableNode : LinearConditionalNode
 	[Output(name = "Execute After")]
 	public ConditionalLink	executeAfter;
 
-	protected virtual IEnumerator AsyncProcess()
+	protected void ProcessFinished()
 	{
-		return null;
+		isFinished = true;
+		onProcessFinished.Invoke(this);
 	}
 
 	public Action<WaitableNode> onProcessFinished;

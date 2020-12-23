@@ -181,6 +181,12 @@ namespace GraphProcessor
 				node.OnNodeCreated();
 				//And move a bit the new node
 				node.position.position += new Vector2(20, 20);
+				var graphCenterPos = -new Vector2(
+										 graph.position.x / scale - editorWindow.position.width / (2f * scale),
+										 graph.position.y / scale - editorWindow.position.height / (2f * scale));
+				
+				if(Vector2.Distance(graphCenterPos, node.position.position) > editorWindow.position.size.magnitude/(2.6f*scale))
+					node.position.position = graphCenterPos;
 
 				var newNodeView = AddNode(node);
 
@@ -283,10 +289,10 @@ namespace GraphProcessor
 						case EdgeView edge:
 							Disconnect(edge);
 							return true;
-						case BaseNodeView node:
-							ExceptionToLog.Call(() => node.OnRemoved());
-							graph.RemoveNode(node.nodeTarget);
-							RemoveElement(node);
+						case BaseNodeView nodeView:
+							ExceptionToLog.Call(() => nodeView.OnRemoved());
+							graph.RemoveNode(nodeView.nodeTarget);
+							RemoveElement(nodeView);
 							return true;
 						case GroupView group:
 							graph.RemoveGroup(group.group);
@@ -636,6 +642,14 @@ namespace GraphProcessor
 			// Force the graph to reload his datas (Undo have updated the serialized properties of the graph
 			// so the one that are not serialized need to be synchronized)
 			graph.Deserialize();
+			
+			// Get selected nodes
+			var selectedNodeGUIDs = new List<string>();
+			foreach (var e in selection)
+			{
+				if (e is BaseNodeView v && this.Contains(v))
+					selectedNodeGUIDs.Add(v.nodeTarget.GUID);
+			}
 
 			// Remove everything
 			RemoveNodeViews();
@@ -652,6 +666,13 @@ namespace GraphProcessor
 			Reload();
 
 			UpdateComputeOrder();
+			
+			// Restore selection after re-creating all views
+			// selection = nodeViews.Where(v => selectedNodeGUIDs.Contains(v.nodeTarget.GUID)).Select(v => v as ISelectable).ToList();
+			foreach (var guid in selectedNodeGUIDs)
+			{
+				AddToSelection(nodeViews.FirstOrDefault(n => n.nodeTarget.GUID == guid));
+			}
 		}
 
 		public void Initialize(BaseGraph graph, bool reInit = false)
@@ -977,6 +998,9 @@ namespace GraphProcessor
 			
 			e.isConnected = true;
 
+			if(outputPortView.portType == typeof(ConditionalLink))
+				e.AddToClassList("conditional-link");
+			
 			return true;
 		}
 		
@@ -1018,7 +1042,7 @@ namespace GraphProcessor
 			ConnectView(e, autoDisconnectInputs);
 
 			UpdateComputeOrder();
-
+			
 			return true;
 		}
 
@@ -1161,6 +1185,9 @@ namespace GraphProcessor
 		{
 			graph.position = Vector3.zero;
 			graph.scale = Vector3.one;
+			
+			RemoveFromClassList("zoom-out");
+			RemoveFromClassList("zoom-in");
 
 			UpdateViewTransform(graph.position, graph.scale);
 		}

@@ -16,26 +16,13 @@ public class WaitNode : WaitableNode
 	protected override void Process()
 	{
 		var go  = new GameObject(name:"OKKU-WaitGameObject");
-		var wmb = go.AddComponent<WaitableMonoBehaviour>();
+		var wmb = go.AddComponent<WaitMonoBehaviour>();
 
-		wmb.Process(waitTime, SetIsFinished);
-	}
-
-	protected override IEnumerator AsyncProcess()
-	{
-		yield return new WaitForSeconds(waitTime);
-
-		isFinished = true;
-	}
-
-	private void SetIsFinished()
-	{
-		isFinished = true;
-		onProcessFinished.Invoke(this);
+		wmb.Process(waitTime, ProcessFinished);
 	}
 }
 
-public class WaitableMonoBehaviour : MonoBehaviour
+public class WaitMonoBehaviour : MonoBehaviour
 {
 	public void Process(float time, Action callback)
 	{
@@ -48,6 +35,6 @@ public class WaitableMonoBehaviour : MonoBehaviour
 		callback.Invoke();
 		yield return new WaitForEndOfFrame();
 
-		Destroy(gameObject);
+		if(gameObject != null) Destroy(gameObject);
 	}
 }
