@@ -9,6 +9,7 @@ using System.Linq;
 namespace GraphProcessor
 {
 	public delegate IEnumerable<PortData> CustomPortBehaviorDelegate(List<SerializableEdge> edges);
+	public delegate IEnumerable< PortData > CustomPortTypeBehaviorDelegate(string fieldName, string displayName, object value);
 
 	[Serializable]
 	public abstract class BaseNode
@@ -65,7 +66,10 @@ namespace GraphProcessor
 
 		[NonSerialized]
 		internal Dictionary<string, NodeFieldInformation> nodeFields = new Dictionary<string, NodeFieldInformation>();
-
+		
+		[NonSerialized]
+		internal Dictionary< Type, CustomPortTypeBehaviorDelegate> customPortTypeBehaviorMap = new Dictionary<Type, CustomPortTypeBehaviorDelegate>();
+		
 		[NonSerialized]
 		List<string> messages = new List<string>();
 
@@ -133,19 +137,56 @@ namespace GraphProcessor
 		public void Initialize(BaseGraph graph)
 		{
 			this.graph = graph;
-
+			
 			ExceptionToLog.Call(() => Enable());
 			
 			InitializePorts();
 		}
 
+		void InitializeCustomPortTypeMethods()
+		{
+			MethodInfo[] methods = new MethodInfo[0];
+			Type baseType = GetType();
+			while (true)
+			{
+				methods = baseType.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance);
+				foreach (var method in methods)
+				{
+					var typeBehaviors = method.GetCustomAttributes<CustomPortTypeBehavior>().ToArray();
+
+					if (typeBehaviors.Length == 0)
+						continue;
+
+					CustomPortTypeBehaviorDelegate deleg = null;
+					try
+					{
+						deleg = Delegate.CreateDelegate(typeof(CustomPortTypeBehaviorDelegate), this, method) as CustomPortTypeBehaviorDelegate;
+					} catch (Exception e)
+					{
+						Debug.LogError(e);
+						Debug.LogError($"Cannot convert method {method} to a delegate of type {typeof(CustomPortTypeBehaviorDelegate)}");
+					}
+
+					foreach (var typeBehavior in typeBehaviors)
+						customPortTypeBehaviorMap[typeBehavior.type] = deleg;
+				}
+
+				// Try to also find private methods in the base class
+				baseType = baseType.BaseType;
+				if (baseType == null)
+					break;
+			}
+		}
+		
 		internal void InitializePorts()
 		{
+			InitializeCustomPortTypeMethods();
+			
 			foreach (var nodeFieldKP in nodeFields.ToList().OrderByDescending(kp => kp.Value.info.MetadataToken))
 			{
 				var nodeField = nodeFieldKP.Value;
 
-				if(nodeField.behavior != null)
+				if (HasCustomBehavior(nodeField))
 				{
 					UpdatePortsForField(nodeField.fieldName);
 				}
@@ -187,7 +228,7 @@ namespace GraphProcessor
 
 			var fieldInfo = nodeFields[fieldName];
 
-			if(fieldInfo.behavior == null)
+			if (!HasCustomBehavior(fieldInfo))
 				return false;
 
 			List<string> finalPorts = new List<string>();
@@ -199,7 +240,20 @@ namespace GraphProcessor
 			// Gather all edges connected to these fields:
 			var edges = nodePorts.SelectMany(n => n.GetEdges()).ToList();
 
-			foreach(var portData in fieldInfo.behavior(edges))
+			if (fieldInfo.behavior != null)
+			{
+				foreach (var portData in fieldInfo.behavior(edges))
+					AddPortData(portData);
+			}
+			else
+			{
+				var customPortTypeBehavior = customPortTypeBehaviorMap[fieldInfo.info.FieldType];
+
+				foreach (var portData in customPortTypeBehavior(fieldName, fieldInfo.name, fieldInfo.info.GetValue(this)))
+					AddPortData(portData);
+			}
+
+			void AddPortData(PortData portData)
 			{
 				var port = nodePorts.FirstOrDefault(n => n.portData.identifier == portData.identifier);
 				// Guard using the port identifier so we don't duplicate identifiers
@@ -259,6 +313,17 @@ namespace GraphProcessor
 
 			return changed;
 		}
+
+		bool HasCustomBehavior(NodeFieldInformation info)
+		{
+			if (info.behavior != null)
+				return true;
+
+			if (customPortTypeBehaviorMap.ContainsKey(info.info.FieldType))
+				return true;
+
+			return false;
+		}
 		
 		/// <summary>
 		/// Update the ports related to one C# property field and all connected nodes in the graph
@@ -297,7 +362,7 @@ namespace GraphProcessor
 							foreach(var edge in port.GetEdges())
 							{
 								var edgeNode           = (node.IsFieldInput(field)) ? edge.outputNode : edge.inputNode;
-								var fieldsWithBehavior = edgeNode.nodeFields.Values.Where(f => f.behavior != null).Select(f => f.fieldName).ToList();
+								var fieldsWithBehavior = edgeNode.nodeFields.Values.Where(f => HasCustomBehavior(f)).Select(f => f.fieldName).ToList();
 								fieldsToUpdate.Push(new PortUpdate{fieldNames = fieldsWithBehavior, node = edgeNode});
 							}
 						}

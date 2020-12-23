@@ -150,6 +150,7 @@ public class ConditionalProcessor : BaseGraphProcessor
 								foreach(var n in wnode.GetExecuteAfterNodes())
 									waitedNodes.Push(n);
 								WaitedRun(waitedNodes);
+								wNode.onProcessFinished = null;
 							};
 							break;
 						case IConditionalNode cNode:
