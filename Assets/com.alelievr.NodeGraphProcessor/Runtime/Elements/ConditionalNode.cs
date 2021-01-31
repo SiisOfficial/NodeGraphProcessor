@@ -53,27 +53,23 @@ public abstract class LinearConditionalNode : ConditionalNode, IConditionalNode
 
 [System.Serializable]
 /// <summary>
-/// This class represent a simple node which takes one event in parameter and pass it to the next node
+/// This class represent a waitable node which invokes another node after a time/frame
 /// </summary>
 public abstract class WaitableNode : LinearConditionalNode
 {
-	[NonSerialized]
-	public bool isFinished = false;
-	
 	[Output(name = "Execute After")]
 	public ConditionalLink	executeAfter;
 
 	protected void ProcessFinished()
 	{
-		isFinished = true;
 		onProcessFinished.Invoke(this);
 	}
 
+	[HideInInspector]
 	public Action<WaitableNode> onProcessFinished;
 
 	public IEnumerable< ConditionalNode >	GetExecuteAfterNodes()
 	{
-		// Return all the nodes connected to the executes port
 		return outputPorts.FirstOrDefault(n => n.fieldName == nameof(executeAfter))
 			.GetEdges().Select(e => e.inputNode as ConditionalNode);
 	}

@@ -13,12 +13,17 @@ public class WaitFrameNode : WaitableNode
 	[SerializeField, Input(name = "Frame")]
 	public int frame = 1;
 
+	private static WaitFrameMonoBehaviour waitFrameMonoBehaviour;
+
 	protected override void Process()
 	{
-		var go  = new GameObject(name: "OKKU-WaitFrameGameObject");
-		var wmb = go.AddComponent<WaitFrameMonoBehaviour>();
+		if(waitFrameMonoBehaviour == null)
+		{
+			var go  = new GameObject(name: "OKKU-WaitFrameGameObject");
+			waitFrameMonoBehaviour = go.AddComponent<WaitFrameMonoBehaviour>();
+		}
 
-		wmb.Process(frame, ProcessFinished);
+		waitFrameMonoBehaviour.Process(frame, ProcessFinished);
 	}
 }
 
@@ -38,8 +43,5 @@ public class WaitFrameMonoBehaviour : MonoBehaviour
 		}
 
 		callback.Invoke();
-		yield return new WaitForEndOfFrame();
-
-		if(gameObject != null) Destroy(gameObject);
 	}
 }
