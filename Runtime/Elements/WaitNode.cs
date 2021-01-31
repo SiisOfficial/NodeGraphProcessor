@@ -11,14 +11,19 @@ public class WaitNode : WaitableNode
 	public override string headerClass => "wait-node";
 
 	[SerializeField, Input(name = "Time")]
-	public float waitTime;
+	public float waitTime = 1f;
+	
+	private static WaitMonoBehaviour waitMonoBehaviour;
 
 	protected override void Process()
 	{
-		var go  = new GameObject(name:"OKKU-WaitGameObject");
-		var wmb = go.AddComponent<WaitMonoBehaviour>();
+		if(waitMonoBehaviour == null)
+		{
+			var go  = new GameObject(name: "OKKU-WaitGameObject");
+			waitMonoBehaviour = go.AddComponent<WaitMonoBehaviour>();
+		}
 
-		wmb.Process(waitTime, ProcessFinished);
+		waitMonoBehaviour.Process(waitTime, ProcessFinished);
 	}
 }
 
@@ -33,8 +38,5 @@ public class WaitMonoBehaviour : MonoBehaviour
 	{
 		yield return new WaitForSeconds(time);
 		callback.Invoke();
-		yield return new WaitForEndOfFrame();
-
-		if(gameObject != null) Destroy(gameObject);
 	}
 }
